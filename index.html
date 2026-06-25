@@ -205,9 +205,24 @@
   .itext b{font-weight:600}
   .itext .q{color:var(--muted);font-style:italic}
   .igo{flex:none;align-self:center;margin-left:6px;text-decoration:none;color:var(--faint);font-size:13px;
-    padding:2px 7px;border-radius:7px;opacity:0;transform:translateX(-4px);transition:.15s}
-  .item:hover .igo{opacity:1;transform:none}
+    padding:2px 7px;border-radius:7px;opacity:.5;transition:.15s}
+  .item:hover .igo{opacity:1}
   .igo:hover{color:var(--text);background:var(--surface3)}
+
+  /* ---- Topics with practice problems ---- */
+  .topic{margin:12px 0 2px}
+  .topic-h{font-size:13px;color:var(--text);font-weight:500;line-height:1.45;padding:2px 0}
+  .topic-h b{font-weight:600}
+  .topic-h .q{color:var(--muted);font-style:italic}
+  .probs{margin:4px 0 2px 5px;padding-left:12px;border-left:1px solid var(--border)}
+  .item.prob{padding:5px 0}
+  .item.prob .itext{font-size:13.5px}
+  .diff{flex:none;align-self:center;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;
+    letter-spacing:.03em;padding:2px 7px;border-radius:99px;border:1px solid;margin-left:8px;white-space:nowrap}
+  .diff.d-easy{color:var(--ok);border-color:rgba(84,214,154,.4);background:rgba(84,214,154,.10)}
+  .diff.d-medium{color:var(--gold);border-color:rgba(245,181,68,.4);background:rgba(245,181,68,.10)}
+  .diff.d-hard{color:var(--dsa);border-color:rgba(255,122,107,.4);background:rgba(255,122,107,.10)}
+  .item.done .diff{opacity:.45}
 
   .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
   .chip-link{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;
@@ -743,6 +758,68 @@ const REVIEW = [
   "Update your cheat sheet & log weak areas to revisit",
 ];
 
+// ============== PRACTICE PROBLEMS (verified LeetCode links) ==============
+const L="https://leetcode.com/problems/";
+const PROBS = {
+  dsa_easy_starter:[{n:"Two Sum",u:L+"two-sum/",d:"E"},{n:"Valid Anagram",u:L+"valid-anagram/",d:"E"},{n:"Contains Duplicate",u:L+"contains-duplicate/",d:"E"},{n:"Best Time to Buy and Sell Stock",u:L+"best-time-to-buy-and-sell-stock/",d:"E"},{n:"Valid Palindrome",u:L+"valid-palindrome/",d:"E"}],
+  arr_basics:[{n:"Running Sum of 1d Array",u:L+"running-sum-of-1d-array/",d:"E"},{n:"Find Pivot Index",u:L+"find-pivot-index/",d:"E"},{n:"Rotate Array",u:L+"rotate-array/",d:"M"},{n:"Plus One",u:L+"plus-one/",d:"E"}],
+  sort_merge:[{n:"Sort an Array",u:L+"sort-an-array/",d:"M"},{n:"Merge Sorted Array",u:L+"merge-sorted-array/",d:"E"},{n:"Count of Smaller Numbers After Self",u:L+"count-of-smaller-numbers-after-self/",d:"H"}],
+  sort_quick:[{n:"Kth Largest Element in an Array",u:L+"kth-largest-element-in-an-array/",d:"M"},{n:"Top K Frequent Elements",u:L+"top-k-frequent-elements/",d:"M"},{n:"K Closest Points to Origin",u:L+"k-closest-points-to-origin/",d:"M"}],
+  arr_classic:[{n:"Maximum Subarray",u:L+"maximum-subarray/",d:"M"},{n:"Sort Colors",u:L+"sort-colors/",d:"M"},{n:"Merge Intervals",u:L+"merge-intervals/",d:"M"},{n:"Next Permutation",u:L+"next-permutation/",d:"M"},{n:"Remove Duplicates from Sorted Array",u:L+"remove-duplicates-from-sorted-array/",d:"E"}],
+  hashing:[{n:"Group Anagrams",u:L+"group-anagrams/",d:"M"},{n:"Subarray Sum Equals K",u:L+"subarray-sum-equals-k/",d:"M"},{n:"Longest Consecutive Sequence",u:L+"longest-consecutive-sequence/",d:"M"},{n:"Single Number",u:L+"single-number/",d:"E"},{n:"Roman to Integer",u:L+"roman-to-integer/",d:"E"}],
+  two_pointers:[{n:"Two Sum II - Input Array Is Sorted",u:L+"two-sum-ii-input-array-is-sorted/",d:"M"},{n:"3Sum",u:L+"3sum/",d:"M"},{n:"Container With Most Water",u:L+"container-with-most-water/",d:"M"},{n:"Trapping Rain Water",u:L+"trapping-rain-water/",d:"H"},{n:"Remove Duplicates from Sorted Array",u:L+"remove-duplicates-from-sorted-array/",d:"E"}],
+  sliding_window:[{n:"Longest Substring Without Repeating Characters",u:L+"longest-substring-without-repeating-characters/",d:"M"},{n:"Minimum Window Substring",u:L+"minimum-window-substring/",d:"H"},{n:"Longest Repeating Character Replacement",u:L+"longest-repeating-character-replacement/",d:"M"},{n:"Maximum Average Subarray I",u:L+"maximum-average-subarray-i/",d:"E"},{n:"Permutation in String",u:L+"permutation-in-string/",d:"M"}],
+  linked_list:[{n:"Reverse Linked List",u:L+"reverse-linked-list/",d:"E"},{n:"Linked List Cycle",u:L+"linked-list-cycle/",d:"E"},{n:"Linked List Cycle II",u:L+"linked-list-cycle-ii/",d:"M"},{n:"Merge Two Sorted Lists",u:L+"merge-two-sorted-lists/",d:"E"},{n:"LRU Cache",u:L+"lru-cache/",d:"M"}],
+  stack:[{n:"Valid Parentheses",u:L+"valid-parentheses/",d:"E"},{n:"Min Stack",u:L+"min-stack/",d:"M"},{n:"Daily Temperatures",u:L+"daily-temperatures/",d:"M"},{n:"Next Greater Element I",u:L+"next-greater-element-i/",d:"E"},{n:"Largest Rectangle in Histogram",u:L+"largest-rectangle-in-histogram/",d:"H"}],
+  queue:[{n:"Implement Queue using Stacks",u:L+"implement-queue-using-stacks/",d:"E"},{n:"Implement Stack using Queues",u:L+"implement-stack-using-queues/",d:"E"},{n:"Sliding Window Maximum",u:L+"sliding-window-maximum/",d:"H"}],
+  binary_search:[{n:"Binary Search",u:L+"binary-search/",d:"E"},{n:"Search in Rotated Sorted Array",u:L+"search-in-rotated-sorted-array/",d:"M"},{n:"Koko Eating Bananas",u:L+"koko-eating-bananas/",d:"M"},{n:"Capacity To Ship Packages Within D Days",u:L+"capacity-to-ship-packages-within-d-days/",d:"M"},{n:"Search in Rotated Sorted Array II",u:L+"search-in-rotated-sorted-array-ii/",d:"M"}],
+  bs_median:[{n:"Median of Two Sorted Arrays",u:L+"median-of-two-sorted-arrays/",d:"H"}],
+  backtracking:[{n:"Subsets",u:L+"subsets/",d:"M"},{n:"Permutations",u:L+"permutations/",d:"M"},{n:"Combination Sum",u:L+"combination-sum/",d:"M"},{n:"N-Queens",u:L+"n-queens/",d:"H"},{n:"Word Search",u:L+"word-search/",d:"M"},{n:"Sudoku Solver",u:L+"sudoku-solver/",d:"H"}],
+  tree_traversal:[{n:"Binary Tree Inorder Traversal",u:L+"binary-tree-inorder-traversal/",d:"E"},{n:"Binary Tree Preorder Traversal",u:L+"binary-tree-preorder-traversal/",d:"E"},{n:"Binary Tree Postorder Traversal",u:L+"binary-tree-postorder-traversal/",d:"E"},{n:"Binary Tree Level Order Traversal",u:L+"binary-tree-level-order-traversal/",d:"M"},{n:"Maximum Depth of Binary Tree",u:L+"maximum-depth-of-binary-tree/",d:"E"}],
+  bst:[{n:"Validate Binary Search Tree",u:L+"validate-binary-search-tree/",d:"M"},{n:"Lowest Common Ancestor of a BST",u:L+"lowest-common-ancestor-of-a-binary-search-tree/",d:"M"},{n:"Kth Smallest Element in a BST",u:L+"kth-smallest-element-in-a-bst/",d:"M"},{n:"Search in a Binary Search Tree",u:L+"search-in-a-binary-search-tree/",d:"E"}],
+  tree_construct:[{n:"Construct Binary Tree from Preorder and Inorder",u:L+"construct-binary-tree-from-preorder-and-inorder-traversal/",d:"M"},{n:"Construct Binary Tree from Inorder and Postorder",u:L+"construct-binary-tree-from-inorder-and-postorder-traversal/",d:"M"},{n:"Serialize and Deserialize Binary Tree",u:L+"serialize-and-deserialize-binary-tree/",d:"H"}],
+  graph_traversal:[{n:"Number of Islands",u:L+"number-of-islands/",d:"M"},{n:"Clone Graph",u:L+"clone-graph/",d:"M"},{n:"Number of Connected Components in an Undirected Graph",u:L+"number-of-connected-components-in-an-undirected-graph/",d:"M"},{n:"Graph Valid Tree",u:L+"graph-valid-tree/",d:"M"},{n:"Rotting Oranges",u:L+"rotting-oranges/",d:"M"}],
+  topo_sort:[{n:"Course Schedule",u:L+"course-schedule/",d:"M"},{n:"Course Schedule II",u:L+"course-schedule-ii/",d:"M"},{n:"Find Eventual Safe States",u:L+"find-eventual-safe-states/",d:"M"}],
+  shortest_path:[{n:"Network Delay Time",u:L+"network-delay-time/",d:"M"},{n:"Cheapest Flights Within K Stops",u:L+"cheapest-flights-within-k-stops/",d:"M"},{n:"Path With Minimum Effort",u:L+"path-with-minimum-effort/",d:"M"},{n:"Path with Maximum Probability",u:L+"path-with-maximum-probability/",d:"M"}],
+  union_find:[{n:"Number of Provinces",u:L+"number-of-provinces/",d:"M"},{n:"Redundant Connection",u:L+"redundant-connection/",d:"M"},{n:"Accounts Merge",u:L+"accounts-merge/",d:"M"}],
+  dp_1d:[{n:"Climbing Stairs",u:L+"climbing-stairs/",d:"E"},{n:"House Robber",u:L+"house-robber/",d:"M"},{n:"House Robber II",u:L+"house-robber-ii/",d:"M"},{n:"Coin Change",u:L+"coin-change/",d:"M"},{n:"Longest Increasing Subsequence",u:L+"longest-increasing-subsequence/",d:"M"}],
+  dp_2d:[{n:"Unique Paths",u:L+"unique-paths/",d:"M"},{n:"Unique Paths II",u:L+"unique-paths-ii/",d:"M"},{n:"Minimum Path Sum",u:L+"minimum-path-sum/",d:"M"},{n:"Edit Distance",u:L+"edit-distance/",d:"M"},{n:"Longest Common Subsequence",u:L+"longest-common-subsequence/",d:"M"}],
+  dp_subseq:[{n:"Partition Equal Subset Sum",u:L+"partition-equal-subset-sum/",d:"M"},{n:"Target Sum",u:L+"target-sum/",d:"M"},{n:"Partition to K Equal Sum Subsets",u:L+"partition-to-k-equal-sum-subsets/",d:"M"},{n:"Coin Change II",u:L+"coin-change-ii/",d:"M"}],
+  dp_stocks:[{n:"Best Time to Buy and Sell Stock",u:L+"best-time-to-buy-and-sell-stock/",d:"E"},{n:"Buy and Sell Stock II",u:L+"best-time-to-buy-and-sell-stock-ii/",d:"M"},{n:"Buy and Sell Stock III",u:L+"best-time-to-buy-and-sell-stock-iii/",d:"H"},{n:"Buy and Sell Stock IV",u:L+"best-time-to-buy-and-sell-stock-iv/",d:"H"},{n:"Buy and Sell Stock with Cooldown",u:L+"best-time-to-buy-and-sell-stock-with-cooldown/",d:"M"}],
+  greedy:[{n:"Jump Game",u:L+"jump-game/",d:"M"},{n:"Jump Game II",u:L+"jump-game-ii/",d:"M"},{n:"Non-overlapping Intervals",u:L+"non-overlapping-intervals/",d:"M"},{n:"Gas Station",u:L+"gas-station/",d:"M"},{n:"Buy and Sell Stock with Transaction Fee",u:L+"best-time-to-buy-and-sell-stock-with-transaction-fee/",d:"M"}],
+  graph_advanced:[{n:"Min Cost to Connect All Points",u:L+"min-cost-to-connect-all-points/",d:"M"},{n:"Critical Connections in a Network",u:L+"critical-connections-in-a-network/",d:"H"},{n:"Course Schedule",u:L+"course-schedule/",d:"M"}],
+  trie:[{n:"Implement Trie (Prefix Tree)",u:L+"implement-trie-prefix-tree/",d:"M"},{n:"Word Search II",u:L+"word-search-ii/",d:"H"},{n:"Design Add and Search Words Data Structure",u:L+"design-add-and-search-words-data-structure/",d:"M"}],
+  heap:[{n:"Kth Largest Element in an Array",u:L+"kth-largest-element-in-an-array/",d:"M"},{n:"Top K Frequent Elements",u:L+"top-k-frequent-elements/",d:"M"},{n:"Merge k Sorted Lists",u:L+"merge-k-sorted-lists/",d:"H"},{n:"Find Median from Data Stream",u:L+"find-median-from-data-stream/",d:"H"},{n:"Kth Largest Element in a Stream",u:L+"kth-largest-element-in-a-stream/",d:"E"}],
+  misc_bit_interval:[{n:"Single Number",u:L+"single-number/",d:"E"},{n:"Counting Bits",u:L+"counting-bits/",d:"E"},{n:"Number of 1 Bits",u:L+"number-of-1-bits/",d:"E"},{n:"Merge Intervals",u:L+"merge-intervals/",d:"M"},{n:"Meeting Rooms",u:L+"meeting-rooms/",d:"E"}],
+  sql_basics:[{n:"Recyclable and Low Fat Products",u:L+"recyclable-and-low-fat-products/",d:"E"},{n:"Big Countries",u:L+"big-countries/",d:"E"},{n:"Find Customer Referee",u:L+"find-customer-referee/",d:"E"},{n:"Customer Placing the Largest Number of Orders",u:L+"customer-placing-the-largest-number-of-orders/",d:"E"}],
+  sql_easy_lc:[{n:"Combine Two Tables",u:L+"combine-two-tables/",d:"E"},{n:"Customers Who Never Order",u:L+"customers-who-never-order/",d:"E"},{n:"Duplicate Emails",u:L+"duplicate-emails/",d:"E"},{n:"Delete Duplicate Emails",u:L+"delete-duplicate-emails/",d:"E"}],
+  sql_joins_basic:[{n:"Employees Earning More Than Their Managers",u:L+"employees-earning-more-than-their-managers/",d:"E"},{n:"Customers Who Never Order",u:L+"customers-who-never-order/",d:"E"},{n:"Combine Two Tables",u:L+"combine-two-tables/",d:"E"}],
+  sql_agg:[{n:"Department Highest Salary",u:L+"department-highest-salary/",d:"M"},{n:"Group Sold Products By The Date",u:L+"group-sold-products-by-the-date/",d:"E"},{n:"Monthly Transactions I",u:L+"monthly-transactions-i/",d:"M"}],
+  sql_joins_adv:[{n:"Rising Temperature",u:L+"rising-temperature/",d:"E"},{n:"Exchange Seats",u:L+"exchange-seats/",d:"M"},{n:"Students and Examinations",u:L+"students-and-examinations/",d:"E"}],
+  sql_subquery:[{n:"Department Highest Salary",u:L+"department-highest-salary/",d:"M"},{n:"Managers with at Least 5 Direct Reports",u:L+"managers-with-at-least-5-direct-reports/",d:"M"},{n:"Second Highest Salary",u:L+"second-highest-salary/",d:"M"}],
+  sql_window_rank:[{n:"Rank Scores",u:L+"rank-scores/",d:"M"},{n:"Department Top Three Salaries",u:L+"department-top-three-salaries/",d:"H"},{n:"Nth Highest Salary",u:L+"nth-highest-salary/",d:"M"},{n:"Second Highest Salary",u:L+"second-highest-salary/",d:"M"}],
+  sql_window_analytic:[{n:"Consecutive Numbers",u:L+"consecutive-numbers/",d:"M"},{n:"Restaurant Growth",u:L+"restaurant-growth/",d:"M"},{n:"Rising Temperature",u:L+"rising-temperature/",d:"E"},{n:"Exchange Seats",u:L+"exchange-seats/",d:"M"}],
+  sql_cte:[{n:"Number of Unique Subjects Taught by Each Teacher",u:L+"number-of-unique-subjects-taught-by-each-teacher/",d:"E"},{n:"Human Traffic of Stadium",u:L+"human-traffic-of-stadium/",d:"H"},{n:"Find the Team Size",u:L+"find-the-team-size/",d:"E"}],
+  sql_case:[{n:"Calculate Special Bonus",u:L+"calculate-special-bonus/",d:"E"},{n:"Students and Examinations",u:L+"students-and-examinations/",d:"E"},{n:"Exchange Seats",u:L+"exchange-seats/",d:"M"}],
+  sql_hard:[{n:"Trips and Users",u:L+"trips-and-users/",d:"H"},{n:"Human Traffic of Stadium",u:L+"human-traffic-of-stadium/",d:"H"},{n:"Department Top Three Salaries",u:L+"department-top-three-salaries/",d:"H"},{n:"Longest Winning Streak",u:L+"longest-winning-streak/",d:"H"}],
+  sql_gaps_islands:[{n:"Consecutive Available Seats",u:L+"consecutive-available-seats/",d:"E"},{n:"Human Traffic of Stadium",u:L+"human-traffic-of-stadium/",d:"H"},{n:"Longest Winning Streak",u:L+"longest-winning-streak/",d:"H"}],
+};
+// Attach a problem set to a curriculum item by position:  `${week}-${track}-${itemIndex}`
+const PK_MAP = {
+  "1-sql-0":"sql_basics","1-sql-1":"sql_easy_lc","1-sql-2":"sql_joins_basic",
+  "2-dsa-6":"dsa_easy_starter","2-sql-0":"sql_agg",
+  "3-dsa-0":"arr_basics","3-dsa-1":"sort_merge","3-dsa-2":"sort_quick","3-dsa-4":"arr_classic","3-sql-0":"sql_joins_adv",
+  "4-dsa-0":"hashing","4-dsa-1":"two_pointers","4-dsa-2":"sliding_window","4-sql-0":"sql_subquery",
+  "5-dsa-0":"linked_list","5-dsa-1":"stack","5-dsa-2":"queue","5-sql-0":"sql_window_rank","5-sql-1":"sql_window_analytic",
+  "6-dsa-0":"binary_search","6-dsa-1":"bs_median","6-dsa-2":"backtracking","6-sql-0":"sql_cte","6-sql-1":"sql_case","6-sql-2":"sql_hard",
+  "7-dsa-0":"tree_traversal","7-dsa-1":"bst","7-dsa-2":"tree_construct",
+  "8-dsa-0":"graph_traversal","8-dsa-1":"topo_sort","8-dsa-2":"shortest_path","8-dsa-3":"union_find","8-sql-0":"sql_gaps_islands",
+  "9-dsa-1":"dp_1d","9-dsa-2":"dp_2d",
+  "10-dsa-0":"dp_subseq","10-dsa-1":"dp_stocks","10-dsa-2":"greedy",
+  "11-dsa-0":"graph_advanced","11-dsa-1":"trie","11-dsa-2":"heap",
+  "12-dsa-0":"misc_bit_interval",
+};
+
 const DAYS_PER_WEEK=7, WORK_DAYS=6;
 const TOTAL_DAYS=WEEKS.length*DAYS_PER_WEEK;
 const WEEK_BUCKETS={};
@@ -769,6 +846,13 @@ function isoLocal(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStar
 const today=()=>isoLocal(new Date());
 function itemId(w,gi,ii){return `w${w}-g${gi}-i${ii}`;}
 function reviewId(w,ri){return `w${w}-r${ri}`;}
+function pkFor(w,track,ii){return PK_MAP[`${w}-${track}-${ii}`];}
+function unitIds(w,track,gi,ii){
+  const pk=pkFor(w,track,ii);
+  if(pk && PROBS[pk]) return PROBS[pk].map((_,pi)=>`w${w}-g${gi}-i${ii}-p${pi}`);
+  return [itemId(w,gi,ii)];
+}
+const DIFF={E:["Easy","d-easy"],M:["Medium","d-medium"],H:["Hard","d-hard"]};
 function dayDiff(a,b){return Math.floor((Date.parse(b+'T00:00:00')-Date.parse(a+'T00:00:00'))/86400000);}
 function currentDayPos(){
   const diff=dayDiff(state.start,today());
@@ -797,11 +881,23 @@ function renderPipe(){
 }
 function chip(l,rkey){return `<a class="chip-link c-${rkey}" href="${l.url}" target="_blank" rel="noopener" title="${esc(l.title)}">${TYPE_GLYPH[l.type]||'🔗'} ${prettyHost(l.url)}</a>`;}
 function itemHtml(w,gi,ii,g){
-  const id=itemId(w,gi,ii), it=g.items[ii];
-  const text=(typeof it==='string')?it:it.t;
-  const key=(typeof it==='object')?it.k:null;
+  const it=g.items[ii];
+  const isObj=typeof it==='object';
+  const text=isObj?it.t:it;
+  const key=isObj?it.k:null;
   const rkey=resKeyFor(g.track,w);
-  const dn=state.checked[id]?'done':'';
+  const pk=pkFor(w,g.track,ii);
+  // DSA/SQL topic with a verified practice-problem set → topic label + checkable problems
+  if(pk && PROBS[pk]){
+    const probs=PROBS[pk].map((p,pi)=>{
+      const id=`w${w}-g${gi}-i${ii}-p${pi}`, dn=state.checked[id]?'done':'';
+      const dd=DIFF[p.d]||['',''];
+      return `<div class="item prob ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${esc(p.n)}</span></div><span class="diff ${dd[1]}">${dd[0]}</span><a class="igo" href="${p.u}" target="_blank" rel="noopener" title="Open “${esc(p.n)}” on LeetCode">↗</a></div>`;
+    }).join('');
+    return `<div class="topic"><div class="topic-h">${text}</div><div class="probs">${probs}</div></div>`;
+  }
+  // plain checkable item (evening theory, or non-problem study items)
+  const id=itemId(w,gi,ii), dn=state.checked[id]?'done':'';
   let linksHtml='', go='';
   if(key && LINKS[key]) linksHtml=`<div class="links">`+LINKS[key].map(l=>chip(l,rkey)).join('')+`</div>`;
   else go=`<a class="igo" href="${resLinkFor(rkey,w)}" target="_blank" rel="noopener" title="Open in ${RESOURCES[rkey].name}">↗</a>`;
@@ -859,14 +955,18 @@ function renderWeeks(){
 // ============== STATS ==============
 function weekStats(W){
   let done=0,total=0;
-  W.groups.forEach((g,gi)=>g.items.forEach((_,ii)=>{total++; if(state.checked[itemId(W.w,gi,ii)])done++;}));
+  W.groups.forEach((g,gi)=>g.items.forEach((_,ii)=>{
+    unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;});
+  }));
   REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   return {done,total};
 }
 function dayStats(W,dInWeek,buckets){
   let done=0,total=0;
   if(dInWeek<=WORK_DAYS){
-    W.groups.forEach((g,gi)=>buckets[gi][dInWeek-1].forEach(ii=>{total++; if(state.checked[itemId(W.w,gi,ii)])done++;}));
+    W.groups.forEach((g,gi)=>buckets[gi][dInWeek-1].forEach(ii=>{
+      unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;});
+    }));
   } else {
     REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   }
