@@ -49,17 +49,44 @@
   .rescard .rc-go{position:absolute;top:14px;right:15px;color:var(--faint);font-size:15px;transition:.2s}
   .rescard:hover .rc-go{color:var(--c);transform:translate(2px,-2px)}
 
-  /* ---- Today bar ---- */
-  .todaybar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 18px;margin-top:18px}
-  .tb-left{font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .tb-left b{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:700}
-  .tb-left span{color:var(--muted);font-size:13px}
-  .tb-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .tb-right label{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
-  .tb-right input[type=date]{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px;color-scheme:dark}
+  /* ---- Today panel ---- */
+  .todaypanel{margin-top:18px;background:linear-gradient(180deg,rgba(245,181,68,.07),transparent 55%),var(--surface);
+    border:1px solid var(--border);border-radius:var(--r);padding:15px 18px 16px;position:relative;overflow:visible}
+  .todaypanel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:var(--r) 0 0 var(--r)}
+  .tp-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;position:relative}
+  .tp-controls label{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .tp-controls input[type=date]{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px;color-scheme:dark}
   #jumpToday{font-size:12px;color:var(--gold);padding:6px 12px;border-radius:8px;border:1px solid rgba(245,181,68,.3)}
   #jumpToday:hover{background:rgba(245,181,68,.1)}
+  .tp-spacer{flex:1}
+  .tp-head{display:flex;align-items:center;gap:16px}
+  .tp-id{flex:1;min-width:0}
+  .tp-day{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:21px}
+  .tp-of{color:var(--faint);font-weight:500;font-size:15px}
+  .tp-meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .tp-ring{--p:0;width:62px;height:62px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative;
+    background:conic-gradient(var(--gold) calc(var(--p)*1%),var(--surface3) 0)}
+  .tp-ring::before{content:"";position:absolute;inset:6px;background:var(--surface);border-radius:50%}
+  .tp-ring span{position:relative;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px}
+  .tp-body .dsec:first-child{margin-top:12px}
+  .tp-empty{font-size:14px;color:var(--muted);padding:10px 0 4px}
+
+  /* ---- Backup & sync popover ---- */
+  .backup{font-size:12px;position:static}
+  .backup summary{list-style:none;cursor:pointer;color:var(--faint);padding:6px 12px;border:1px solid var(--border);border-radius:8px;white-space:nowrap}
+  .backup summary::-webkit-details-marker{display:none}
+  .backup summary:hover{color:var(--muted)}
+  .backup[open] summary{color:var(--text);border-color:var(--faint)}
+  .bk-body{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:min(360px,calc(100vw - 52px));
+    background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:0 22px 50px -20px #000}
+  .bk-note{font-size:12px;color:var(--muted);margin:0 0 4px;line-height:1.5}
+  .bk-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .bk-btn{font-size:12px;font-weight:600;color:var(--text);background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:7px 11px;transition:.12s}
+  .bk-btn:hover{border-color:var(--faint);transform:translateY(-1px)}
+  .bk-sync{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+  .bk-sub{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text);margin-bottom:6px}
+  .bk-sub span{font-weight:400;color:var(--faint)}
+  #bkCode{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px;resize:vertical}
 
   /* ---- Top stats ---- */
   .stats{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:14px;margin-top:14px}
@@ -218,13 +245,33 @@
     <div class="reslab">Your resources · every topic below also links to the best free articles & docs</div>
     <div class="rescards" id="rescards"></div>
 
-    <div class="todaybar">
-      <div class="tb-left">📍 <b id="tbDay">Day 1</b> <span id="tbWk">· Week 1 · Day 1</span></div>
-      <div class="tb-right">
-        <label>Day 1 starts <input type="date" id="startDate"></label>
-        <button id="jumpToday">Jump to today →</button>
+    <section class="todaypanel">
+      <div class="tp-controls">
+        <label>📅 Day 1 starts <input type="date" id="startDate"></label>
+        <button class="ghost" id="jumpToday">Find today in plan ↓</button>
+        <span class="tp-spacer"></span>
+        <details class="backup">
+          <summary>⬍ Backup &amp; sync</summary>
+          <div class="bk-body">
+            <p class="bk-note">Progress is saved in <b>this browser only</b>. Download a backup, or move it to another device.</p>
+            <div class="bk-row">
+              <button class="bk-btn" id="bkExport">⬇ Download backup</button>
+              <button class="bk-btn" id="bkImportBtn">⬆ Restore from file</button>
+              <input type="file" id="bkImport" accept="application/json,.json" hidden>
+            </div>
+            <div class="bk-sync">
+              <div class="bk-sub">Sync code <span>— copy here, paste &amp; Apply on another device</span></div>
+              <textarea id="bkCode" rows="3" spellcheck="false"></textarea>
+              <div class="bk-row">
+                <button class="bk-btn" id="bkCopy">Copy code</button>
+                <button class="bk-btn" id="bkApply">Apply pasted code</button>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
-    </div>
+      <div id="todayPanel"></div>
+    </section>
 
     <div class="stats">
       <div class="stat ring-stat">
@@ -760,9 +807,9 @@ function itemHtml(w,gi,ii,g){
   else go=`<a class="igo" href="${resLinkFor(rkey,w)}" target="_blank" rel="noopener" title="Open in ${RESOURCES[rkey].name}">↗</a>`;
   return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${text}</span>${linksHtml}</div>${go}</div>`;
 }
-function sectionHtml(W,gi,dInWeek){
+function sectionHtml(W,gi,dInWeek,ignoreFilter){
   const g=W.groups[gi];
-  if(filter!=='all' && g.track!==filter) return '';
+  if(!ignoreFilter && filter!=='all' && g.track!==filter) return '';
   const rkey=resKeyFor(g.track,W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
   const idxs=WEEK_BUCKETS[W.w][gi][dInWeek-1];
   let inner;
@@ -770,8 +817,8 @@ function sectionHtml(W,gi,dInWeek){
   else inner=`<div class="revnote">↻ Spaced revision — re-attempt earlier ${R.label} material</div>`;
   return `<div class="dsec"><div class="ghead"><div class="tlabel ${rkey}"><span class="dot ${rkey}"></span>${R.label}<span class="target">· ${g.target}</span></div><a class="reslink r-${rkey}" href="${link}" target="_blank" rel="noopener">${R.name} ↗</a></div>${inner}</div>`;
 }
-function reviewHtml(W){
-  if(filter!=='all') return `<div class="dsec"><div class="revnote">Review & mock day — switch to “All tracks” to view tasks.</div></div>`;
+function reviewHtml(W,ignoreFilter){
+  if(!ignoreFilter && filter!=='all') return `<div class="dsec"><div class="revnote">Review & mock day — switch to “All tracks” to view tasks.</div></div>`;
   const items=REVIEW.map((t,ri)=>{const id=reviewId(W.w,ri);const dn=state.checked[id]?'done':'';return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${t}</span></div></div>`;}).join('');
   return `<div class="dsec"><div class="ghead"><div class="tlabel rev"><span class="dot" style="background:var(--gold)"></span>REVIEW &amp; MOCK</div></div>${items}</div>`;
 }
@@ -854,12 +901,35 @@ function refreshWeekBars(){
     const bar=el.querySelector('.wbar i'); if(bar)bar.style.width=pct+'%';
   });
 }
-function refreshToday(){
+function renderTodayPanel(){
+  const host=document.getElementById('todayPanel'); if(!host)return;
   const c=currentDayPos();
-  const el=document.getElementById('tbDay'), wk=document.getElementById('tbWk');
-  if(c.diff<0){el.textContent=`Starts in ${-c.diff} day${c.diff===-1?'':'s'}`; wk.textContent=`· Day 1 is ${fmtDate(dateForDay(1))}`;}
-  else if(c.diff>=TOTAL_DAYS){el.textContent='Plan complete 🎉'; wk.textContent=`· all ${TOTAL_DAYS} days elapsed`;}
-  else {el.textContent=`Day ${c.gday} of ${TOTAL_DAYS}`; wk.textContent=`· Week ${c.w} · Day ${c.dInWeek} · ${fmtDate(dateForDay(c.gday))}`;}
+  if(c.diff<0){host.innerHTML=`<div class="tp-empty">📅 Your plan starts <b>${fmtDate(dateForDay(1))}</b> — ${-c.diff} day${c.diff===-1?'':'s'} to go. Adjust the start date above if that's not right.</div>`;return;}
+  if(c.diff>=TOTAL_DAYS){host.innerHTML=`<div class="tp-empty">🎉 You've reached the end of the ${TOTAL_DAYS}-day timeline. Keep drilling weak areas — then go get the offer.</div>`;return;}
+  const W=WEEKS.find(x=>x.w===c.w), d=c.dInWeek, gday=c.gday, isReview=d>WORK_DAYS;
+  const content=isReview?reviewHtml(W,true):W.groups.map((_,gi)=>sectionHtml(W,gi,d,true)).join('');
+  const ds=dayStats(W,d,WEEK_BUCKETS[W.w]); const pct=ds.total?Math.round(ds.done/ds.total*100):0;
+  host.innerHTML=`<div class="tp-head">
+      <div class="tp-id">
+        <div class="tp-day">Today · Day ${gday}<span class="tp-of"> / ${TOTAL_DAYS}</span></div>
+        <div class="tp-meta">Week ${c.w} · Day ${d}${isReview?' · Review &amp; Mock':''} · ${fmtDate(dateForDay(gday))} · <b>${W.title}</b></div>
+      </div>
+      <div class="tp-ring" style="--p:${pct}"><span>${ds.done}/${ds.total}</span></div>
+    </div>
+    <div class="tp-body">${content}</div>`;
+}
+
+// ---- Backup & sync ----
+function syncCode(){return btoa(unescape(encodeURIComponent(JSON.stringify(state))));}
+function refreshSyncCode(){const el=document.getElementById('bkCode'); if(el && document.activeElement!==el)el.value=syncCode();}
+function applyState(obj){
+  if(!obj||typeof obj!=='object')throw 0;
+  state={checked:(obj.checked&&typeof obj.checked==='object')?obj.checked:{},
+    dsa:typeof obj.dsa==='number'?obj.dsa:0, sql:typeof obj.sql==='number'?obj.sql:0,
+    streak:Array.isArray(obj.streak)?obj.streak:[], start:obj.start||today()};
+  save();
+  document.getElementById('startDate').value=state.start;
+  renderWeeks();renderPipe();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
 }
 function updateDay(dayEl){
   const w=+dayEl.dataset.w, d=+dayEl.dataset.din, W=WEEKS.find(x=>x.w===w);
@@ -874,10 +944,13 @@ document.addEventListener('click',e=>{
   const item=e.target.closest('.item');
   if(item){
     const id=item.dataset.id;
-    state.checked[id]=!state.checked[id];
-    if(!state.checked[id])delete state.checked[id];
-    item.classList.toggle('done');
-    const dayEl=item.closest('.day'); if(dayEl)updateDay(dayEl);
+    const now=!state.checked[id];
+    if(now)state.checked[id]=true; else delete state.checked[id];
+    document.querySelectorAll(`.item[data-id="${CSS.escape(id)}"]`).forEach(el=>{
+      el.classList.toggle('done',now);
+      const d=el.closest('.day'); if(d)updateDay(d);
+    });
+    renderTodayPanel();
     refreshStats();refreshWeekBars();renderPipe();save();return;
   }
   const tog=e.target.closest('[data-toggle]');
@@ -898,16 +971,41 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Reset all progress — checkmarks, counters, and streak? (Your start date is kept.) This cannot be undone.'))return;
   state={checked:{},dsa:0,sql:0,streak:[],start:state.start};
   try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
-  renderWeeks();renderPipe();refreshStats();refreshWeekBars();refreshToday();
+  renderWeeks();renderPipe();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
 });
 document.getElementById('startDate').addEventListener('change',e=>{
   state.start=e.target.value||today(); save();
-  renderWeeks();refreshWeekBars();refreshToday();
+  renderWeeks();refreshWeekBars();renderTodayPanel();
 });
 document.getElementById('jumpToday').addEventListener('click',()=>{
   const c=currentDayPos();
   const wkEl=document.querySelector(`.week[data-w="${c.w}"]`); if(wkEl)wkEl.classList.add('open');
   const dayEl=document.getElementById(`day-${c.gday}`); if(dayEl){dayEl.open=true; dayEl.scrollIntoView({behavior:'smooth',block:'center'});}
+});
+// ---- Backup & sync wiring ----
+document.querySelector('.backup').addEventListener('toggle',e=>{ if(e.target.open)refreshSyncCode(); });
+document.getElementById('bkExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`prep-progress-${today()}.json`; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+document.getElementById('bkImportBtn').addEventListener('click',()=>document.getElementById('bkImport').click());
+document.getElementById('bkImport').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ applyState(JSON.parse(r.result)); alert('Progress restored ✓'); }catch(err){ alert('Could not read that backup file.'); } };
+  r.readAsText(f); e.target.value='';
+});
+document.getElementById('bkCopy').addEventListener('click',async()=>{
+  const el=document.getElementById('bkCode'); el.value=syncCode(); el.select();
+  try{ await navigator.clipboard.writeText(el.value); }catch(e){ try{document.execCommand('copy');}catch(_){} }
+  const b=document.getElementById('bkCopy'), o=b.textContent; b.textContent='Copied ✓'; setTimeout(()=>b.textContent=o,1200);
+});
+document.getElementById('bkApply').addEventListener('click',()=>{
+  const v=document.getElementById('bkCode').value.trim(); if(!v)return;
+  try{ applyState(JSON.parse(decodeURIComponent(escape(atob(v))))); alert('Progress synced ✓'); }
+  catch(e){ alert('That sync code looks invalid — copy the whole code and try again.'); }
 });
 
 // ============== INIT ==============
@@ -916,7 +1014,7 @@ document.getElementById('jumpToday').addEventListener('click',()=>{
   if(!state.start){state.start=today();save();}
   WEEKS.forEach(W=>WEEK_BUCKETS[W.w]=W.groups.map(g=>chunkBuckets(g.items.length,WORK_DAYS)));
   document.getElementById('startDate').value=state.start;
-  renderResourceCards();renderPipe();renderWeeks();refreshStats();refreshWeekBars();refreshToday();
+  renderResourceCards();renderPipe();renderWeeks();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
 })();
 </script>
 </body>
