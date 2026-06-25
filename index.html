@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>90-Day SDE Prep — Control Room</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#0E1117; --surface:#161B26; --surface2:#1C2230; --surface3:#222B3B;
+    --border:#2A3340; --text:#E6E9EF; --muted:#8A93A6; --faint:#5A6376;
+    --gold:#F5B544; --dsa:#FF7A6B; --sql:#43D6C4; --sd:#9B8CFF; --de:#5AA9FF; --eve:#9B8CFF; --ok:#54D69A;
+    --r:14px;
+    --dsa-soft:rgba(255,122,107,.14); --sql-soft:rgba(67,214,196,.14); --eve-soft:rgba(155,140,255,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.5;
+    -webkit-font-smoothing:antialiased;padding:0 0 80px;
+    background-image:radial-gradient(900px 500px at 85% -10%,rgba(245,181,68,.06),transparent),
+                     radial-gradient(700px 500px at 0% 0%,rgba(91,169,255,.05),transparent);
+    background-attachment:fixed}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;letter-spacing:-.01em}
+  .mono{font-family:'JetBrains Mono',monospace}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  a{color:inherit}
+
+  /* ---- Header ---- */
+  header{padding:34px 0 22px;border-bottom:1px solid var(--border);margin-bottom:26px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  header h1{font-size:clamp(28px,5vw,42px);font-weight:700;line-height:1.05}
+  header h1 .accent{color:var(--gold)}
+  .sub{color:var(--muted);margin-top:8px;font-size:15px;max-width:680px}
+
+  /* ---- Resource hub ---- */
+  .reslab{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:30px 0 12px;font-weight:600}
+  .rescards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .rescard{display:block;text-decoration:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:16px 17px;position:relative;overflow:hidden;color:var(--text);
+    transition:transform .2s cubic-bezier(.2,.7,.3,1),border-color .2s,box-shadow .2s}
+  .rescard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+  .rescard:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 14px 34px -16px var(--c)}
+  .rescard .rc-track{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--c);font-weight:700}
+  .rescard .rc-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-top:8px}
+  .rescard .rc-desc{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+  .rescard .rc-go{position:absolute;top:14px;right:15px;color:var(--faint);font-size:15px;transition:.2s}
+  .rescard:hover .rc-go{color:var(--c);transform:translate(2px,-2px)}
+
+  /* ---- Today bar ---- */
+  .todaybar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 18px;margin-top:18px}
+  .tb-left{font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .tb-left b{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:700}
+  .tb-left span{color:var(--muted);font-size:13px}
+  .tb-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .tb-right label{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .tb-right input[type=date]{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px;color-scheme:dark}
+  #jumpToday{font-size:12px;color:var(--gold);padding:6px 12px;border-radius:8px;border:1px solid rgba(245,181,68,.3)}
+  #jumpToday:hover{background:rgba(245,181,68,.1)}
+
+  /* ---- Top stats ---- */
+  .stats{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:14px;margin-top:14px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+  .stat .lab{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600}
+  .stat .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:30px;margin-top:6px;line-height:1}
+  .stat .hint{font-size:12px;color:var(--faint);margin-top:6px}
+  .ring-stat{display:flex;align-items:center;gap:16px}
+  .ring{--p:0;width:78px;height:78px;border-radius:50%;flex:none;
+    background:conic-gradient(var(--gold) calc(var(--p)*1%), var(--surface3) 0);
+    display:grid;place-items:center;position:relative}
+  .ring::before{content:"";position:absolute;inset:7px;background:var(--surface);border-radius:50%}
+  .ring span{position:relative;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px}
+  .counter-btns{display:flex;gap:6px;margin-top:10px}
+  .counter-btns button{width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);
+    font-size:16px;font-weight:600;color:var(--text);transition:.12s}
+  .counter-btns button:hover{background:var(--surface3)}
+  .counter-btns button.plus{color:var(--ok)} .counter-btns button.minus{color:var(--muted)}
+  #streakBtn{margin-top:10px;width:100%;padding:8px;border-radius:9px;background:var(--gold);color:#1a1306;font-weight:700;font-size:13px;transition:.12s}
+  #streakBtn:hover{filter:brightness(1.06)}
+  #streakBtn.done{background:var(--surface2);color:var(--ok);border:1px solid var(--border)}
+
+  /* ---- Pipeline ---- */
+  .pipe-wrap{margin:30px 0 8px}
+  .pipe-title{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px;font-weight:600}
+  .pipe{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+  .stage{flex:1;padding:14px 12px;border-right:1px solid var(--border);position:relative;min-width:0}
+  .stage:last-child{border-right:none}
+  .stage .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint)}
+  .stage .t{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stage .wk{font-size:11px;color:var(--muted);margin-top:2px}
+  .stage .bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:9px;overflow:hidden}
+  .stage .bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .4s}
+  .stage.active{background:linear-gradient(180deg,rgba(245,181,68,.10),transparent)}
+  .stage.active .t{color:var(--gold)}
+
+  /* ---- Filters ---- */
+  .toolbar{display:flex;align-items:center;gap:10px;margin:28px 0 16px;flex-wrap:wrap}
+  .filters{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:12px;font-weight:600;padding:7px 13px;border-radius:99px;border:1px solid var(--border);color:var(--muted);background:var(--surface);transition:.12s}
+  .chip:hover{color:var(--text)}
+  .chip.on{color:var(--text)}
+  .chip[data-f="dsa"].on{background:var(--dsa-soft);border-color:var(--dsa);color:var(--dsa)}
+  .chip[data-f="sql"].on{background:var(--sql-soft);border-color:var(--sql);color:var(--sql)}
+  .chip[data-f="eve"].on{background:var(--eve-soft);border-color:var(--eve);color:var(--eve)}
+  .chip[data-f="all"].on{background:var(--surface3);border-color:var(--faint);color:var(--text)}
+  .spacer{flex:1}
+  .ghost{font-size:12px;color:var(--faint);padding:7px 12px;border-radius:8px;border:1px solid transparent}
+  .ghost:hover{color:var(--muted);border-color:var(--border)}
+
+  /* ---- Weeks ---- */
+  .week{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;transition:border-color .18s}
+  .week:hover{border-color:#36404f}
+  .whead{display:flex;align-items:center;gap:14px;padding:16px 18px;width:100%;text-align:left}
+  .wnum{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--gold);
+    background:rgba(245,181,68,.1);border:1px solid rgba(245,181,68,.25);border-radius:8px;padding:4px 8px;flex:none}
+  .wmeta{flex:1;min-width:0}
+  .wmeta h3{font-size:16px;font-weight:600}
+  .wphase{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:600;margin-top:2px}
+  .wright{display:flex;align-items:center;gap:14px;flex:none}
+  .wpct{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);font-weight:500;min-width:38px;text-align:right}
+  .wbar{width:90px;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden}
+  .wbar i{display:block;height:100%;background:var(--ok);width:0;transition:width .35s}
+  .caret{color:var(--faint);transition:transform .2s;font-size:13px}
+  .week.open .caret{transform:rotate(90deg)}
+  .wbody{display:none;padding:2px 16px 14px;border-top:1px solid var(--border)}
+  .week.open .wbody{display:block}
+
+  /* ---- Days ---- */
+  .day{border:1px solid var(--border);border-radius:11px;margin:10px 0;background:var(--surface2);overflow:hidden;transition:border-color .18s,box-shadow .18s}
+  .day[open]{background:var(--surface)}
+  .day.complete{border-color:rgba(84,214,154,.45)}
+  .day.today{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,181,68,.3)}
+  .dsum{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 15px;user-select:none}
+  .dsum::-webkit-details-marker{display:none}
+  .dcaret{color:var(--faint);font-size:11px;transition:transform .2s;flex:none}
+  .day[open] .dcaret{transform:rotate(90deg)}
+  .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--text);flex:none}
+  .dtag{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);border:1px solid var(--border);border-radius:99px;padding:2px 8px;flex:none}
+  .dtag.review{color:var(--gold);border-color:rgba(245,181,68,.3)}
+  .dtag.today{color:var(--gold);background:rgba(245,181,68,.12);border-color:rgba(245,181,68,.4)}
+  .dfill{flex:1}
+  .ddate{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;flex:none}
+  .dprog{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);min-width:36px;text-align:right;flex:none}
+  .day.complete .dprog{color:var(--ok)}
+  .dcontent{padding:2px 16px 16px;border-top:1px solid var(--border)}
+
+  .dsec{margin-top:15px}
+  .ghead{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .tlabel{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11px;
+    font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .dot{width:8px;height:8px;border-radius:2px;flex:none}
+  .dot.dsa{background:var(--dsa)} .dot.sql{background:var(--sql)} .dot.sd{background:var(--sd)} .dot.de{background:var(--de)}
+  .tlabel.dsa{color:var(--dsa)} .tlabel.sql{color:var(--sql)} .tlabel.sd{color:var(--sd)} .tlabel.de{color:var(--de)} .tlabel.rev{color:var(--gold)}
+  .tlabel .target{color:var(--faint);font-weight:500;letter-spacing:.02em;text-transform:none;margin-left:4px}
+  .reslink{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;
+    font-size:10px;font-weight:700;letter-spacing:.04em;padding:5px 10px;border-radius:99px;border:1px solid var(--border);
+    color:var(--muted);text-decoration:none;white-space:nowrap;transition:.15s}
+  .reslink:hover{transform:translateY(-1px)}
+  .reslink.r-dsa:hover{color:var(--dsa);border-color:var(--dsa);background:var(--dsa-soft)}
+  .reslink.r-sql:hover{color:var(--sql);border-color:var(--sql);background:var(--sql-soft)}
+  .reslink.r-sd:hover{color:var(--sd);border-color:var(--sd);background:var(--eve-soft)}
+  .reslink.r-de:hover{color:var(--de);border-color:var(--de);background:rgba(91,169,255,.14)}
+
+  .item{display:flex;gap:11px;padding:8px 0;align-items:flex-start;cursor:pointer;border-radius:8px;transition:.1s}
+  .item:hover{background:var(--surface2);padding-left:8px;padding-right:8px;margin:0 -8px}
+  .box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--faint);flex:none;margin-top:2px;
+    display:grid;place-items:center;transition:.12s;position:relative}
+  .item:hover .box{border-color:var(--muted)}
+  .box svg{width:11px;height:11px;opacity:0;transform:scale(.5);transition:.14s}
+  .item.done .box{background:var(--ok);border-color:var(--ok)}
+  .item.done .box svg{opacity:1;transform:scale(1)}
+  .item.done .itext{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--faint)}
+  .ibody{flex:1;min-width:0}
+  .itext{display:block;font-size:14px;color:var(--text)}
+  .itext b{font-weight:600}
+  .itext .q{color:var(--muted);font-style:italic}
+  .igo{flex:none;align-self:center;margin-left:6px;text-decoration:none;color:var(--faint);font-size:13px;
+    padding:2px 7px;border-radius:7px;opacity:0;transform:translateX(-4px);transition:.15s}
+  .item:hover .igo{opacity:1;transform:none}
+  .igo:hover{color:var(--text);background:var(--surface3)}
+
+  .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .chip-link{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;
+    padding:3px 9px;border-radius:7px;border:1px solid var(--border);color:var(--muted);text-decoration:none;background:var(--surface2);transition:.13s;line-height:1.6}
+  .chip-link:hover{transform:translateY(-1px);color:var(--text);background:var(--surface3)}
+  .chip-link.c-sd:hover{border-color:var(--sd);color:var(--sd)}
+  .chip-link.c-de:hover{border-color:var(--de);color:var(--de)}
+  .revnote{font-size:13px;color:var(--faint);padding:5px 0 2px;font-style:italic}
+
+  footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--border);color:var(--faint);font-size:12px;text-align:center;line-height:1.7}
+  .legend{display:inline-flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+
+  @media(max-width:760px){
+    .rescards{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .pipe{flex-wrap:wrap}
+    .stage{flex:1 1 40%;border-bottom:1px solid var(--border)}
+    .stage .t{white-space:normal}
+    .wbar{display:none}
+    .wright .wpct{min-width:34px}
+    .ddate{display:none}
+  }
+  @media(max-width:460px){ .rescards{grid-template-columns:1fr} }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FAANG-Track · Senior Data Engineer · 90 Days</div>
+    <h1>The <span class="accent">Control Room</span></h1>
+    <p class="sub">A day-by-day battle plan: daily DSA + SQL, a front-loaded System Design sprint, then deep production-grade engineering. Every topic links to 2–3 hand-picked resources, and your progress saves automatically in this browser.</p>
+
+    <div class="reslab">Your resources · every topic below also links to the best free articles & docs</div>
+    <div class="rescards" id="rescards"></div>
+
+    <div class="todaybar">
+      <div class="tb-left">📍 <b id="tbDay">Day 1</b> <span id="tbWk">· Week 1 · Day 1</span></div>
+      <div class="tb-right">
+        <label>Day 1 starts <input type="date" id="startDate"></label>
+        <button id="jumpToday">Jump to today →</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat ring-stat">
+        <div class="ring" id="ring"><span id="ringPct">0%</span></div>
+        <div>
+          <div class="lab">Overall</div>
+          <div class="hint" id="overallHint">0 / 0 items done</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="lab" style="color:var(--dsa)">DSA Solved</div>
+        <div class="val" id="dsaVal">0</div>
+        <div class="counter-btns">
+          <button class="minus" data-c="dsa" data-d="-1">−</button>
+          <button class="plus" data-c="dsa" data-d="1">+</button>
+          <button class="plus" data-c="dsa" data-d="5" style="font-size:12px">+5</button>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="lab" style="color:var(--sql)">SQL Solved</div>
+        <div class="val" id="sqlVal">0</div>
+        <div class="counter-btns">
+          <button class="minus" data-c="sql" data-d="-1">−</button>
+          <button class="plus" data-c="sql" data-d="1">+</button>
+          <button class="plus" data-c="sql" data-d="5" style="font-size:12px">+5</button>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="lab">Streak</div>
+        <div class="val mono"><span id="streakVal">0</span><span style="font-size:14px;color:var(--faint)"> days</span></div>
+        <button id="streakBtn">Mark today done</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="pipe-wrap">
+    <div class="pipe-title">The Pipeline · 5 stages</div>
+    <div class="pipe" id="pipe"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button class="chip on" data-f="all">All tracks</button>
+      <button class="chip" data-f="dsa">DSA</button>
+      <button class="chip" data-f="sql">SQL</button>
+      <button class="chip" data-f="eve">Evening</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="ghost" id="expandAll">Expand all</button>
+    <button class="ghost" id="collapseAll">Collapse all</button>
+    <button class="ghost" id="resetBtn">Reset</button>
+  </div>
+
+  <div id="weeks"></div>
+
+  <footer>
+    <div class="legend">
+      <span><i class="dot dsa" style="width:10px;height:10px"></i> DSA — Striver A2Z (morning, daily)</span>
+      <span><i class="dot sql" style="width:10px;height:10px"></i> SQL — DataLemur (midday, daily)</span>
+      <span><i class="dot sd" style="width:10px;height:10px"></i> System Design — DesignGurus</span>
+      <span><i class="dot de" style="width:10px;height:10px"></i> Data Engineering — DataPathsala + curated articles</span>
+    </div>
+    Ask yourself on every DE topic: <i>what breaks at 10×? what would page me at 2 AM?</i><br>
+    That instinct is what separates senior from mid-level.
+  </footer>
+</div>
+
+<script>
+// ============== RESOURCES (track-level primary destinations) ==============
+const RESOURCES = {
+  dsa:{label:"DSA",            name:"Striver A2Z",   desc:"Striver's A2Z Sheet — 450+ problems, basics → graphs → DP.", color:"var(--dsa)", url:"https://takeuforward.org/dsa/strivers-a2z-sheet-learn-dsa-a-to-z"},
+  sql:{label:"SQL",            name:"DataLemur",     desc:"Real SQL interview questions — filter by topic & difficulty.", color:"var(--sql)", url:"https://datalemur.com/questions"},
+  sd: {label:"System Design",  name:"DesignGurus",   desc:"Grokking System Design Fundamentals — 25 chapters, 105 lessons.", color:"var(--sd)", url:"https://www.designgurus.io/course/grokking-system-design-fundamentals"},
+  de: {label:"Data Engineering",name:"DataPathsala", desc:"Practice + theory for DEs, backed by curated deep-dive articles.", color:"var(--de)", url:"https://www.datapathsala.com/"},
+};
+function resKeyFor(track,w){
+  if(track==='dsa') return 'dsa';
+  if(track==='sql') return 'sql';
+  return (w<=3) ? 'sd' : 'de';
+}
+function resLinkFor(key,w){
+  if(key==='de'){
+    if(w>=11 && w<=12) return "https://www.datapathsala.com/system-design";
+    if(w===13)         return "https://www.datapathsala.com/interview";
+    return "https://www.datapathsala.com/courses";
+  }
+  return RESOURCES[key].url;
+}
+
+// ============== CURATED RESOURCE LINKS (verified) ==============
+const LINKS = {
+  // --- System Design fundamentals ---
+  sd_web:[{title:"How the web works — MDN Web Docs",url:"https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works",type:"docs"},{title:"What is DNS? How DNS works — Cloudflare",url:"https://www.cloudflare.com/learning/dns/what-is-dns/",type:"article"},{title:"Client-Server Model — GeeksforGeeks",url:"https://www.geeksforgeeks.org/system-design/client-server-model/",type:"article"}],
+  sd_lb:[{title:"What is load balancing? — Cloudflare",url:"https://www.cloudflare.com/learning/performance/what-is-load-balancing/",type:"article"},{title:"Stateless vs Stateful Load Balancing — GeeksforGeeks",url:"https://www.geeksforgeeks.org/system-design/stateless-vs-stateful-load-balancing/",type:"article"},{title:"Stateful vs Stateless Architecture — Aerospike",url:"https://aerospike.com/blog/stateful-vs-stateless-architecture-guide/",type:"article"}],
+  sd_scaling:[{title:"Vertical vs Horizontal Scaling — AlgoMaster",url:"https://blog.algomaster.io/p/system-design-vertical-vs-horizontal-scaling",type:"article"},{title:"Vertical vs Horizontal Scaling — Cockroach Labs",url:"https://www.cockroachlabs.com/blog/vertical-scaling-vs-horizontal-scaling/",type:"article"},{title:"Horizontal and Vertical Scaling — GeeksforGeeks",url:"https://www.geeksforgeeks.org/system-design/system-design-horizontal-and-vertical-scaling/",type:"article"}],
+  sd_cap:[{title:"A Critique of the CAP Theorem — Martin Kleppmann",url:"https://martin.kleppmann.com/2015/09/17/critique-of-the-cap-theorem.html",type:"article"},{title:"What is CAP Theorem? — ScyllaDB",url:"https://www.scylladb.com/glossary/cap-theorem/",type:"article"},{title:"A Critique of the CAP Theorem (paper)",url:"https://arxiv.org/abs/1509.05393",type:"article"}],
+  sd_replication:[{title:"Replication: Leaders and Followers (DDIA Ch.5)",url:"https://notes.shichao.io/dda/ch5/",type:"article"},{title:"Leader and follower replication — Educative",url:"https://www.educative.io/answers/leader-and-follower-replication",type:"article"}],
+  sd_idempotency:[{title:"Designing robust APIs with idempotency — Stripe",url:"https://stripe.com/blog/idempotency",type:"article"},{title:"Implementing Idempotency Keys in Postgres — brandur",url:"https://brandur.org/idempotency-keys",type:"article"}],
+  sd_caching:[{title:"What is a CDN? — Cloudflare",url:"https://www.cloudflare.com/learning/cdn/what-is-a-cdn/",type:"article"},{title:"Consistent Hashing — GeeksforGeeks",url:"https://www.geeksforgeeks.org/system-design/consistent-hashing/",type:"article"},{title:"Consistent Hashing — ByteByteGo",url:"https://www.youtube.com/watch?v=UF9Iqmg94tk",type:"video"}],
+  sd_sharding:[{title:"Data partitioning guidance — Azure Architecture Center",url:"https://learn.microsoft.com/en-us/azure/architecture/best-practices/data-partitioning",type:"docs"},{title:"Partitioning, Sharding, and Replication — DEV",url:"https://dev.to/jayaprasanna_roddam/database-partitioning-sharding-and-replication-17oc",type:"article"}],
+
+  // --- Databases & modeling ---
+  db_oltp_olap:[{title:"OLAP vs OLTP — AWS",url:"https://aws.amazon.com/compare/the-difference-between-olap-and-oltp/",type:"article"},{title:"OLTP vs OLAP — Snowflake",url:"https://www.snowflake.com/en/fundamentals/olap-vs-oltp-the-differences/",type:"article"}],
+  db_normalization:[{title:"Understand star schema (normalized vs denormalized) — MS Learn",url:"https://learn.microsoft.com/en-us/power-bi/guidance/star-schema",type:"docs"},{title:"Normalized vs denormalized schemas — Snowflake",url:"https://www.snowflake.com/en/fundamentals/olap-vs-oltp-the-differences/",type:"article"}],
+  db_indexing:[{title:"The B-Tree — Use The Index, Luke!",url:"https://use-the-index-luke.com/sql/anatomy/the-tree",type:"article"},{title:"Concatenated (Composite) Indexes — Use The Index, Luke!",url:"https://use-the-index-luke.com/sql/where-clause/the-equals-operator/concatenated-keys",type:"article"},{title:"How Database Indexes Work (PostgreSQL) — freeCodeCamp",url:"https://www.freecodecamp.org/news/how-database-indexes-work-a-practical-guide-with-postgresql-examples/",type:"article"}],
+  db_explain:[{title:"Using EXPLAIN — PostgreSQL Docs",url:"https://www.postgresql.org/docs/current/using-explain.html",type:"docs"},{title:"Index-Only Scan / covering indexes — Use The Index, Luke!",url:"https://use-the-index-luke.com/sql/clustering/index-only-scan-covering-index",type:"article"}],
+  db_partitioning:[{title:"Table Partitioning — PostgreSQL Docs",url:"https://www.postgresql.org/docs/current/ddl-partitioning.html",type:"docs"},{title:"Native Partitioning with pg_partman — Crunchy Data",url:"https://www.crunchydata.com/blog/native-partitioning-with-postgres",type:"article"}],
+  db_mvcc:[{title:"MVCC in PostgreSQL — Vacuum (Egor Rogov)",url:"https://postgrespro.com/blog/pgsql/5967918",type:"article"},{title:"Routine Vacuuming — PostgreSQL Docs",url:"https://www.postgresql.org/docs/current/routine-vacuuming.html",type:"docs"},{title:"Delete strategies for large Postgres tables",url:"https://medium.com/joor-engineering/delete-strategies-for-large-tables-using-postgres-c4e0734bb844",type:"article"}],
+
+  // --- Kafka ---
+  kafka_arch:[{title:"Kafka Replication & Committed Messages — Confluent Docs",url:"https://docs.confluent.io/kafka/design/replication.html",type:"docs"},{title:"Kafka Internal Architecture (Jun Rao) — Confluent",url:"https://developer.confluent.io/courses/architecture/get-started/",type:"course"}],
+  kafka_producer:[{title:"Producer Configs (acks, idempotence, batching) — Confluent",url:"https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html",type:"docs"},{title:"Producer Configs — Apache Kafka Docs",url:"https://kafka.apache.org/41/configuration/producer-configs/",type:"docs"},{title:"Kafka Producers Explained — Conduktor",url:"https://www.conduktor.io/glossary/kafka-producers",type:"article"}],
+  kafka_consumer:[{title:"Consumer Group Protocol — Confluent",url:"https://developer.confluent.io/courses/architecture/consumer-group-protocol/",type:"course"},{title:"Consumer (assignment, cooperative-sticky) — Confluent Docs",url:"https://docs.confluent.io/platform/current/clients/consumer.html",type:"docs"},{title:"Consumer Groups: How They Work — Conduktor",url:"https://www.conduktor.io/glossary/kafka-consumer-groups-explained",type:"article"}],
+  kafka_delivery:[{title:"Message Delivery Guarantees — Confluent Docs",url:"https://docs.confluent.io/kafka/design/delivery-semantics.html",type:"docs"},{title:"Exactly-Once Semantics: How Kafka Does It — Confluent",url:"https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/",type:"article"}],
+  kafka_schema:[{title:"Schema Evolution & Compatibility Types — Confluent Docs",url:"https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html",type:"docs"},{title:"Protobuf Serializer for Schema Registry — Confluent Docs",url:"https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/serdes-protobuf.html",type:"docs"}],
+  kafka_troubleshoot:[{title:"Kafka Issues in Production: Diagnose & Prevent — Confluent",url:"https://www.confluent.io/learn/kafka-issues-production/",type:"article"},{title:"Kafka Rebalancing Explained — Confluent",url:"https://www.confluent.io/learn/kafka-rebalancing/",type:"article"}],
+
+  // --- Spark ---
+  spark_internals:[{title:"Anatomy of a Spark Application — luminousmen",url:"https://luminousmen.com/post/spark-anatomy-of-spark-application/",type:"article"},{title:"Apache Spark Architecture — DataCamp",url:"https://www.datacamp.com/blog/apache-spark-architecture",type:"article"},{title:"RDD Programming Guide — Apache Spark Docs",url:"https://spark.apache.org/docs/latest/rdd-programming-guide.html",type:"docs"}],
+  spark_memory:[{title:"Tuning Spark — Memory Management — Apache Spark Docs",url:"https://spark.apache.org/docs/latest/tuning.html",type:"docs"},{title:"Spark Memory Management: Complete Guide — luminousmen",url:"https://luminousmen.com/post/dive-into-spark-memory/",type:"article"}],
+  spark_shuffle:[{title:"Understanding Apache Spark Shuffle — Big Data Performance",url:"https://bigdataperformance.substack.com/p/understanding-apache-spark-shuffle",type:"article"},{title:"What I Learned About Spark Shuffles in 8 Years",url:"https://medium.com/@sairam94.a/what-i-learned-about-spark-shuffles-after-8-years-of-writing-production-jobs-33d454c92150",type:"article"},{title:"Shuffle Operations — Apache Spark Docs",url:"https://spark.apache.org/docs/latest/rdd-programming-guide.html",type:"docs"}],
+  spark_joins:[{title:"Join Strategy Hints & Auto-Broadcast — Apache Spark Docs",url:"https://spark.apache.org/docs/latest/sql-performance-tuning.html",type:"docs"},{title:"Spark Join Strategies Explained Visually — Canadian Data Guy",url:"https://www.canadiandataguy.com/p/spark-join-strategies",type:"article"}],
+  spark_skew:[{title:"Adaptive Query Execution — Databricks",url:"https://www.databricks.com/blog/2020/05/29/adaptive-query-execution-speeding-up-spark-sql-at-runtime.html",type:"article"},{title:"Mitigating Data Skew in Spark — Canadian Data Guy",url:"https://www.canadiandataguy.com/p/a-deep-dive-into-skewed-joins-groupby",type:"article"},{title:"AQE Skew Join Handling — Databricks Docs",url:"https://docs.databricks.com/aws/en/optimizations/aqe",type:"docs"}],
+  spark_catalyst:[{title:"Deep Dive into Catalyst Optimizer — Databricks",url:"https://www.databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html",type:"article"},{title:"What is a Catalyst Optimizer? — Databricks",url:"https://www.databricks.com/blog/what-is-catalyst-optimizer",type:"article"}],
+  spark_tuning:[{title:"Tuning Spark — Serialization, Memory, Locality — Spark Docs",url:"https://spark.apache.org/docs/latest/tuning.html",type:"docs"},{title:"Compacting Files (small file problem) — MungingData",url:"https://www.mungingdata.com/apache-spark/compacting-files/",type:"article"},{title:"AQE Partition Coalescing & Hints — Spark Docs",url:"https://spark.apache.org/docs/latest/sql-performance-tuning.html",type:"docs"}],
+
+  // --- Warehouse / Lake / Lakehouse ---
+  wh_modeling:[{title:"Slowly Changing Dimensions, Part 2 — Kimball Group",url:"https://www.kimballgroup.com/2008/09/slowly-changing-dimensions-part-2/",type:"article"},{title:"SCD Types 0,4,5,6,7 — Kimball Group",url:"https://www.kimballgroup.com/2013/02/design-tip-152-slowly-changing-dimension-types-0-4-5-6-7/",type:"article"},{title:"Kimball's Dimensional Data Modeling — Holistics",url:"https://www.holistics.io/books/setup-analytics/kimball-s-dimensional-data-modeling/",type:"article"}],
+  lake_zones:[{title:"What is Medallion Architecture? — Databricks",url:"https://www.databricks.com/blog/what-is-medallion-architecture",type:"article"},{title:"Medallion lakehouse architecture — Databricks Docs",url:"https://docs.databricks.com/aws/en/lakehouse/medallion",type:"docs"}],
+  lakehouse:[{title:"Iceberg vs Delta Lake vs Hudi architecture — Dremio",url:"https://www.dremio.com/blog/exploring-the-architecture-of-apache-iceberg-delta-lake-and-apache-hudi/",type:"article"},{title:"Iceberg vs Delta Lake — DataCamp",url:"https://www.datacamp.com/blog/iceberg-vs-delta-lake",type:"article"},{title:"Delta Lake Introduction (ACID, time travel) — Delta Docs",url:"https://docs.delta.io/latest/delta-intro.html",type:"docs"}],
+  iceberg:[{title:"Iceberg Evolution (schema/partition/sort) — Iceberg Docs",url:"https://iceberg.apache.org/docs/latest/evolution/",type:"docs"},{title:"Iceberg Table Spec (snapshots, manifests) — Iceberg Docs",url:"https://iceberg.apache.org/spec/",type:"docs"},{title:"Iceberg Partition Evolution — Dremio",url:"https://www.dremio.com/blog/apache-iceberg-partition-evolution-change-your-partitioning-strategy-without-rewriting-data/",type:"article"}],
+  file_formats:[{title:"Columnar formats: Parquet, ORC, Arrow — ClickHouse",url:"https://clickhouse.com/resources/engineering/columnar-storage-formats",type:"article"},{title:"Parquet File Format (row groups, metadata) — Parquet Docs",url:"https://parquet.apache.org/docs/file-format/",type:"docs"},{title:"What is a Parquet File? — MotherDuck",url:"https://motherduck.com/learn/why-choose-parquet-table-file-format/",type:"article"}],
+  small_files:[{title:"Small File Compaction with OPTIMIZE — Delta Lake",url:"https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/",type:"article"},{title:"Delta Lake Z-Order — Delta Lake",url:"https://delta.io/blog/2023-06-03-delta-lake-z-order/",type:"article"}],
+
+  // --- Cloud (AWS/GCP) ---
+  aws_stack:[{title:"AWS Analytics Overview — AWS whitepaper",url:"https://docs.aws.amazon.com/whitepapers/latest/aws-overview/analytics.html",type:"docs"},{title:"Choosing an AWS analytics service — AWS Decision Guide",url:"https://docs.aws.amazon.com/decision-guides/latest/analytics-on-aws-how-to-choose/analytics-on-aws-how-to-choose.html",type:"docs"},{title:"Analytics on AWS — data lakes & analytics",url:"https://aws.amazon.com/big-data/datalakes-and-analytics/",type:"article"}],
+  gcp_stack:[{title:"Big data & analytics — Google Cloud Architecture Center",url:"https://docs.cloud.google.com/architecture/big-data-analytics",type:"docs"},{title:"Data analytics documentation — Google Cloud",url:"https://docs.cloud.google.com/docs/data",type:"docs"}],
+  cloud_mapping:[{title:"Compare AWS & Azure to Google Cloud — Google Cloud",url:"https://docs.cloud.google.com/docs/get-started/aws-azure-gcp-service-comparison",type:"docs"}],
+  bigquery:[{title:"Understand slots — BigQuery Docs",url:"https://docs.cloud.google.com/bigquery/docs/slots",type:"docs"},{title:"Partitioned tables — BigQuery Docs",url:"https://docs.cloud.google.com/bigquery/docs/partitioned-tables",type:"docs"},{title:"Estimate & control costs — BigQuery Docs",url:"https://docs.cloud.google.com/bigquery/docs/best-practices-costs",type:"docs"}],
+  redshift:[{title:"Designing tables: dist & sort keys — Amazon Redshift",url:"https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/best-practices-tables.html",type:"docs"},{title:"Vacuuming tables — Amazon Redshift",url:"https://docs.aws.amazon.com/redshift/latest/dg/t_Reclaiming_storage_space202.html",type:"docs"},{title:"Redshift Spectrum overview — AWS",url:"https://docs.aws.amazon.com/redshift/latest/dg/c-spectrum-overview.html",type:"docs"}],
+  cloud_cost:[{title:"Cost modeling data lakes — AWS whitepaper",url:"https://docs.aws.amazon.com/whitepapers/latest/cost-modeling-data-lakes/overview-of-cost-optimization.html",type:"docs"},{title:"Cost optimization — Amazon S3",url:"https://docs.aws.amazon.com/AmazonS3/latest/userguide/cost-optimization.html",type:"docs"},{title:"Right Sizing — AWS Cost Management",url:"https://aws.amazon.com/aws-cost-management/aws-cost-optimization/right-sizing/",type:"article"}],
+  iam_vpc:[{title:"What is IAM? — AWS",url:"https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html",type:"docs"},{title:"What is Amazon VPC? — AWS",url:"https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html",type:"docs"},{title:"Network pricing (egress) — Google Cloud",url:"https://cloud.google.com/vpc/network-pricing",type:"docs"}],
+
+  // --- CI/CD, DevOps, K8s ---
+  cicd:[{title:"CI with GitHub Actions — GitHub Docs",url:"https://docs.github.com/en/actions/get-started/continuous-integration",type:"docs"},{title:"Build a CI/CD pipeline with GitHub Actions in 4 steps",url:"https://github.blog/enterprise-software/ci-cd/build-ci-cd-pipeline-github-actions-four-steps/",type:"article"},{title:"About workflows — GitHub Docs",url:"https://docs.github.com/en/actions/concepts/workflows-and-actions/about-workflows",type:"docs"}],
+  data_cicd:[{title:"Continuous integration in dbt (Slim CI) — dbt Docs",url:"https://docs.getdbt.com/docs/deploy/continuous-integration",type:"docs"},{title:"Building your first CI pipeline for dbt — Datafold",url:"https://www.datafold.com/blog/building-your-first-ci-pipeline-for-your-dbt-project/",type:"article"},{title:"Custom CI/CD pipelines — dbt Docs",url:"https://docs.getdbt.com/guides/custom-cicd-pipelines",type:"docs"}],
+  terraform:[{title:"What is Terraform (IaC, write/plan/apply) — HashiCorp",url:"https://developer.hashicorp.com/terraform/intro",type:"docs"},{title:"Terraform State — HashiCorp",url:"https://developer.hashicorp.com/terraform/language/state",type:"docs"},{title:"IaC with Terraform (hands-on) — HashiCorp",url:"https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code",type:"course"}],
+  docker:[{title:"Multi-stage builds — Docker Docs",url:"https://docs.docker.com/build/building/multi-stage/",type:"docs"},{title:"Image-building best practices — Docker Docs",url:"https://docs.docker.com/get-started/workshop/09_image_best/",type:"docs"}],
+  k8s:[{title:"Pods — Kubernetes Docs",url:"https://kubernetes.io/docs/concepts/workloads/pods/",type:"docs"},{title:"Horizontal Pod Autoscaling — Kubernetes Docs",url:"https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/",type:"docs"},{title:"ConfigMaps — Kubernetes Docs",url:"https://kubernetes.io/docs/concepts/configuration/configmap/",type:"docs"}],
+  spark_k8s:[{title:"Running Spark on Kubernetes — Apache Spark Docs",url:"https://spark.apache.org/docs/latest/running-on-kubernetes.html",type:"docs"},{title:"Kubernetes vs YARN for scheduling Spark — Flexera",url:"https://www.flexera.com/blog/finops/kubernetes-vs-yarn-for-scheduling-apache-spark/",type:"article"}],
+  observability:[{title:"Observability best practices for pipelines — Databricks",url:"https://docs.databricks.com/aws/en/data-engineering/observability-best-practices",type:"docs"}],
+  airflow_perf:[{title:"Scheduler fine-tuning & performance — Airflow Docs",url:"https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/scheduler.html",type:"docs"},{title:"Scaling Airflow to optimize performance — Astronomer",url:"https://www.astronomer.io/docs/learn/airflow-scaling-workers",type:"docs"}],
+
+  // --- AI / RAG / MCP ---
+  vectordb:[{title:"A Developer's Guide to ANN Algorithms — Pinecone",url:"https://www.pinecone.io/learn/a-developers-guide-to-ann-algorithms/",type:"article"},{title:"HNSW (with FAISS code) — Pinecone",url:"https://www.pinecone.io/learn/series/faiss/hnsw/",type:"article"},{title:"Vector Similarity Search with pgvector — Severalnines",url:"https://severalnines.com/blog/vector-similarity-search-with-postgresqls-pgvector-a-deep-dive/",type:"article"}],
+  rag:[{title:"Retrieval Augmented Generation — Pinecone",url:"https://www.pinecone.io/learn/series/rag/",type:"article"},{title:"Rerankers & Two-Stage Retrieval — Pinecone",url:"https://www.pinecone.io/learn/series/rag/rerankers/",type:"article"},{title:"Advanced RAG with LangChain — Hugging Face",url:"https://huggingface.co/learn/cookbook/en/advanced_rag",type:"course"}],
+  rag_eval:[{title:"RAG Evaluation (LLM-as-a-judge) — Hugging Face",url:"https://huggingface.co/learn/cookbook/en/rag_evaluation",type:"course"},{title:"Best Practices in RAG Evaluation — Qdrant",url:"https://qdrant.tech/blog/rag-evaluation-guide/",type:"article"}],
+  agentic:[{title:"Building Effective Agents — Anthropic",url:"https://www.anthropic.com/research/building-effective-agents",type:"article"},{title:"ReAct: Reasoning and Acting in LLMs (paper)",url:"https://arxiv.org/abs/2210.03629",type:"article"},{title:"ReAct — Official Code (GitHub)",url:"https://github.com/ysymyth/ReAct",type:"github"}],
+  mcp:[{title:"What is the Model Context Protocol? — MCP Docs",url:"https://modelcontextprotocol.io/docs/getting-started/intro",type:"docs"},{title:"Introducing the Model Context Protocol — Anthropic",url:"https://www.anthropic.com/news/model-context-protocol",type:"article"},{title:"MCP Specification & SDKs — GitHub",url:"https://github.com/modelcontextprotocol/modelcontextprotocol",type:"github"}],
+  llmops:[{title:"Building LLM Applications for Production — Chip Huyen",url:"https://huyenchip.com/2023/04/11/llm-engineering.html",type:"article"},{title:"LLMOps: What it is and how it works — Google Cloud",url:"https://cloud.google.com/discover/what-is-llmops",type:"article"}],
+  rag_pipeline:[{title:"Build an unstructured data pipeline for RAG — Databricks",url:"https://learn.microsoft.com/en-us/azure/databricks/generative-ai/tutorials/ai-cookbook/quality-data-pipeline-rag",type:"docs"},{title:"RAG Data Ingestion — AI Engineering Academy",url:"https://aiengineering.academy/RAG/01_Data_Ingestion/data_ingestion/",type:"course"}],
+
+  // --- DE system design + governance ---
+  realtime_pipeline:[{title:"Real-Time Exactly-Once Ad Event Processing — Uber",url:"https://www.uber.com/blog/real-time-exactly-once-ad-event-processing/",type:"article"},{title:"Building Scalable Streaming Pipelines — Uber",url:"https://www.uber.com/blog/building-scalable-streaming-pipelines/",type:"article"},{title:"The System Design Primer — GitHub",url:"https://github.com/donnemartin/system-design-primer",type:"github"}],
+  exactly_once_stream:[{title:"Timely Stream Processing (watermarks) — Apache Flink",url:"https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/",type:"docs"},{title:"Stateful Stream Processing (checkpoints, EOS) — Apache Flink",url:"https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/stateful-stream-processing/",type:"docs"},{title:"Exactly-Once: How Kafka Does It — Confluent",url:"https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/",type:"article"}],
+  cdc:[{title:"Debezium Tutorial (CDC setup) — Debezium",url:"https://debezium.io/documentation/reference/stable/tutorial.html",type:"docs"},{title:"Debezium Features (snapshots, ordering, deletes)",url:"https://debezium.io/documentation/reference/stable/features.html",type:"docs"},{title:"Succeeding with Change Data Capture — Confluent",url:"https://www.confluent.io/blog/how-change-data-capture-works-patterns-solutions-implementation/",type:"article"}],
+  metrics_platform:[{title:"M3: Uber's Large-scale Metrics Platform — Uber",url:"https://www.uber.com/blog/m3/",type:"article"},{title:"Prometheus Storage (TSDB, compaction, retention)",url:"https://prometheus.io/docs/prometheus/latest/storage/",type:"docs"}],
+  event_sourcing:[{title:"Event Sourcing — Martin Fowler",url:"https://martinfowler.com/eaaDev/EventSourcing.html",type:"article"},{title:"CQRS pattern — microservices.io",url:"https://microservices.io/patterns/data/cqrs.html",type:"article"}],
+  airflow_deep:[{title:"Executor concepts & types — Airflow Docs",url:"https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html",type:"docs"},{title:"Best Practices (idempotency, backfills) — Airflow Docs",url:"https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html",type:"docs"}],
+  data_governance:[{title:"OpenLineage — open framework for data lineage",url:"https://openlineage.io/",type:"docs"},{title:"DataHub: OpenLineage integration",url:"https://docs.datahub.com/docs/lineage/openlineage",type:"docs"},{title:"Data Contract Specification & Guide",url:"https://www.datacontract.com/",type:"docs"}],
+  de_interview:[{title:"The System Design Primer — GitHub",url:"https://github.com/donnemartin/system-design-primer",type:"github"},{title:"The Data Engineering Cookbook — GitHub",url:"https://github.com/andkret/Cookbook",type:"github"}],
+};
+const TYPE_GLYPH={article:"📄",docs:"📘",video:"▶",course:"🎓",github:"💻"};
+const HOST_MAP={
+ 'developer.mozilla.org':'MDN','cloudflare.com':'Cloudflare','geeksforgeeks.org':'GeeksforGeeks','blog.algomaster.io':'AlgoMaster',
+ 'cockroachlabs.com':'Cockroach Labs','martin.kleppmann.com':'Kleppmann','scylladb.com':'ScyllaDB','arxiv.org':'arXiv',
+ 'notes.shichao.io':'DDIA Notes','educative.io':'Educative','stripe.com':'Stripe','brandur.org':'brandur','youtube.com':'YouTube',
+ 'learn.microsoft.com':'MS Learn','dev.to':'DEV','aws.amazon.com':'AWS','docs.aws.amazon.com':'AWS Docs','snowflake.com':'Snowflake',
+ 'use-the-index-luke.com':'Use The Index Luke','freecodecamp.org':'freeCodeCamp','postgresql.org':'PostgreSQL','crunchydata.com':'Crunchy Data',
+ 'postgrespro.com':'Postgres Pro','medium.com':'Medium','docs.confluent.io':'Confluent Docs','developer.confluent.io':'Confluent',
+ 'confluent.io':'Confluent','kafka.apache.org':'Kafka Docs','conduktor.io':'Conduktor','luminousmen.com':'luminousmen','datacamp.com':'DataCamp',
+ 'spark.apache.org':'Spark Docs','bigdataperformance.substack.com':'Substack','canadiandataguy.com':'Canadian Data Guy','databricks.com':'Databricks',
+ 'docs.databricks.com':'Databricks Docs','mungingdata.com':'MungingData','kimballgroup.com':'Kimball Group','holistics.io':'Holistics',
+ 'dremio.com':'Dremio','iceberg.apache.org':'Iceberg Docs','clickhouse.com':'ClickHouse','parquet.apache.org':'Parquet Docs','motherduck.com':'MotherDuck',
+ 'delta.io':'Delta Lake','docs.cloud.google.com':'Google Cloud','cloud.google.com':'Google Cloud','github.com':'GitHub','github.blog':'GitHub Blog',
+ 'docs.github.com':'GitHub Docs','developer.hashicorp.com':'HashiCorp','docs.docker.com':'Docker Docs','kubernetes.io':'Kubernetes','flexera.com':'Flexera',
+ 'docs.getdbt.com':'dbt Docs','datafold.com':'Datafold','astronomer.io':'Astronomer','airflow.apache.org':'Airflow Docs','pinecone.io':'Pinecone',
+ 'severalnines.com':'Severalnines','huggingface.co':'Hugging Face','qdrant.tech':'Qdrant','anthropic.com':'Anthropic','modelcontextprotocol.io':'MCP Docs',
+ 'huyenchip.com':'Chip Huyen','uber.com':'Uber Eng','nightlies.apache.org':'Flink Docs','debezium.io':'Debezium','prometheus.io':'Prometheus',
+ 'martinfowler.com':'Martin Fowler','microservices.io':'microservices.io','openlineage.io':'OpenLineage','docs.datahub.com':'DataHub',
+ 'datacontract.com':'Data Contract','aiengineering.academy':'AI Eng Academy','aerospike.com':'Aerospike',
+};
+function prettyHost(url){
+  let h; try{h=new URL(url).hostname.replace(/^www\./,'');}catch(e){return 'link';}
+  if(HOST_MAP[h])return HOST_MAP[h];
+  const stripped=h.replace(/^(docs|developer|blog|learn|notes|nightlies|cloud)\./,'');
+  if(HOST_MAP[stripped])return HOST_MAP[stripped];
+  const name=stripped.split('.')[0];
+  return name.charAt(0).toUpperCase()+name.slice(1);
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ============== CURRICULUM DATA ==============
+const PHASES = [
+  {n:"01", t:"Python", wk:"W1–2", weeks:[1,2]},
+  {n:"02", t:"DSA Core", wk:"W3–6", weeks:[3,4,5,6]},
+  {n:"03", t:"DE Depth", wk:"W7–10", weeks:[7,8,9,10]},
+  {n:"04", t:"DE Sys Design", wk:"W11–12", weeks:[11,12]},
+  {n:"05", t:"Mocks", wk:"W13", weeks:[13]},
+];
+// track: dsa | sql | eve.  Evening items may be {t:text, k:linkKey}.
+const WEEKS = [
+{w:1, phase:"Phase 1 · Python Foundations", title:"Python core + first reps", groups:[
+  {track:"dsa", target:"Python prep", items:[
+    "<b>Lists & slicing</b> — comprehensions, nested lists, complexity of append/insert/pop",
+    "<b>Dicts</b> — defaultdict, Counter, why lookup is O(1), hash collisions",
+    "<b>Sets & tuples</b> — set ops, frozenset, tuples as keys, namedtuple",
+    "<b>collections</b> — deque (O(1) appendleft), heapq, bisect",
+    "<b>Functions</b> — first-class, lambda, map/filter/reduce, *args/**kwargs",
+    "<b>Closures & decorators</b> — late-binding gotcha, @functools.wraps",
+  ]},
+  {track:"sql", target:"2/day · Easy", items:[
+    "DataLemur Easy — SELECT, WHERE, GROUP BY, HAVING",
+    "LeetCode Easy SQL — 1/day warm-up",
+    "Basic JOINs (INNER, LEFT) — get fluent",
+  ]},
+  {track:"eve", target:"System Design starts now", items:[
+    {t:"<b>Client-server, IP, DNS</b> — how the web works", k:"sd_web"},
+    {t:"Load balancing concepts, stateless vs stateful services", k:"sd_lb"},
+    {t:"Vertical vs horizontal scaling — when each applies", k:"sd_scaling"},
+  ]},
+]},
+{w:2, phase:"Phase 1 · Python Foundations", title:"OOP, recursion & patterns", groups:[
+  {track:"dsa", target:"Python prep + 10 easy", items:[
+    "<b>OOP for DSA</b> — __init__, instance vs class vars, inheritance, MRO",
+    "<b>Dunder methods</b> — __repr__, __eq__, __hash__, __lt__ (heapq with objects)",
+    "<b>Build from scratch</b> — ListNode, TreeNode, Graph adjacency list",
+    "<b>Recursion</b> — base/recursive pattern, recursion limit, recursion→stack",
+    "<b>Memoization</b> — @lru_cache and manual memo dicts",
+    "<b>Generators & itertools</b> — yield, permutations, combinations, groupby",
+    "Solve 10 easy problems on TUF+ writing clean Python",
+  ]},
+  {track:"sql", target:"2/day · Easy", items:[
+    "DataLemur Easy — aggregations, DISTINCT, ORDER BY, LIMIT",
+    "LeetCode Easy SQL continued",
+    "Reach ~25–30 easy problems total by end of week",
+  ]},
+  {track:"eve", target:"System Design", items:[
+    {t:"<b>CAP theorem</b>, consistency models", k:"sd_cap"},
+    {t:"Database replication basics (leader-follower)", k:"sd_replication"},
+    {t:"Idempotency & retries as a system concept", k:"sd_idempotency"},
+  ]},
+]},
+{w:3, phase:"Phase 2 · DSA Core", title:"Arrays & sorting", groups:[
+  {track:"dsa", target:"15–18 problems", items:[
+    "Array basics — traversal, rotation, prefix sums",
+    "<b>Merge Sort</b> (stable, external sort — ties to Spark shuffle sort)",
+    "<b>Quick Sort</b> — pivot strategies, worst case O(n²)",
+    "Counting / Radix sort — when bounded ranges win",
+    "Kadane's, Dutch National Flag, merge intervals, next permutation",
+  ]},
+  {track:"sql", target:"2–3/day · Medium", items:[
+    "Move to Medium — all JOIN types + self-joins",
+    "CROSS JOIN and when it's actually useful",
+  ]},
+  {track:"eve", target:"System Design (wrap fundamentals)", items:[
+    {t:"<b>Caching strategies</b>, CDNs, consistent hashing", k:"sd_caching"},
+    {t:"Partitioning & sharding strategies", k:"sd_sharding"},
+    "<b>Finish the fundamentals course</b> — DE deep dives start next week",
+  ]},
+]},
+{w:4, phase:"Phase 2 · DSA Core", title:"Hashing · two pointers · sliding window", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "Hashing — frequency counting, anagrams, subarray-sum patterns",
+    "Two pointers — pair sum, 3-sum, container with most water, trapping rain",
+    "Sliding window — fixed & variable, min window substring, longest unique substring",
+  ]},
+  {track:"sql", target:"2–3/day · Medium", items:[
+    "Subqueries — correlated vs non-correlated",
+    "EXISTS vs IN — performance implications",
+  ]},
+  {track:"eve", target:"DE — Databases & Modeling", items:[
+    {t:"OLTP vs OLAP — <span class='q'>5s dashboard query on prod Postgres: diagnose</span>", k:"db_oltp_olap"},
+    {t:"Normalization vs denormalization — star schema, wide tables", k:"db_normalization"},
+    {t:"Indexing — B-tree vs hash vs bitmap, composite, covering, partial", k:"db_indexing"},
+    {t:"EXPLAIN ANALYZE — seq scan vs index scan, join algorithms", k:"db_explain"},
+    {t:"Partitioning — <span class='q'>2B-row events table, recent queries slow: design it</span>", k:"db_partitioning"},
+    {t:"MVCC, vacuum, dead tuples; <span class='q'>DELETE on 500M rows locks table — alternatives?</span>", k:"db_mvcc"},
+  ]},
+]},
+{w:5, phase:"Phase 2 · DSA Core", title:"Linked lists · stacks · queues", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "Linked lists — reversal, Floyd's cycle, merge sorted, <b>LRU Cache</b>",
+    "Stacks — monotonic stack, next greater element, largest rectangle",
+    "Queues — implement via stacks, sliding window max (deque)",
+  ]},
+  {track:"sql", target:"Window functions week", items:[
+    "ROW_NUMBER, RANK, DENSE_RANK — know the differences cold",
+    "LEAD / LAG, running totals, moving averages (FAANG gold)",
+  ]},
+  {track:"eve", target:"DE — Apache Kafka", items:[
+    {t:"Architecture — brokers, partitions, segments, ISR, controller election", k:"kafka_arch"},
+    {t:"Producer — acks (0/1/all), idempotent producer, batching, ordering", k:"kafka_producer"},
+    {t:"Consumer — groups, assignment strategies, cooperative-sticky rebalancing", k:"kafka_consumer"},
+    {t:"Offsets & delivery — at-least-once vs exactly-once (transactional EOS)", k:"kafka_delivery"},
+    {t:"Schema Registry — Avro/Protobuf, backward/forward/full compatibility", k:"kafka_schema"},
+    {t:"<span class='q'>Lag growing on 3 of 50 partitions — what's happening?</span>", k:"kafka_troubleshoot"},
+    {t:"<span class='q'>Losing messages in prod — diagnose (ISR, unclean leader, acks)</span>", k:"kafka_troubleshoot"},
+    {t:"<span class='q'>Rebalancing storms stalling the pipeline — tune it</span>", k:"kafka_troubleshoot"},
+  ]},
+]},
+{w:6, phase:"Phase 2 · DSA Core", title:"Binary search · recursion · backtracking", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "Binary search on arrays + <b>on answer space</b> (aggressive cows, book allocation)",
+    "Median of two sorted arrays",
+    "Backtracking — subsets, permutations, combination sum, N-Queens, Sudoku",
+  ]},
+  {track:"sql", target:"CTEs + Hard begins", items:[
+    "CTEs and recursive CTEs",
+    "CASE WHEN, complex GROUP BY + HAVING",
+    "Start Hard problems on DataLemur",
+  ]},
+  {track:"eve", target:"DE — Apache Spark", items:[
+    {t:"Internals — driver, executors, DAG/task scheduler, wide vs narrow", k:"spark_internals"},
+    {t:"Memory — unified model (execution vs storage), Tungsten, off-heap", k:"spark_memory"},
+    {t:"Shuffle — why it's costly, sort-based shuffle, minimizing it", k:"spark_shuffle"},
+    {t:"Joins — broadcast hash, sort-merge, shuffle hash; skew handling", k:"spark_joins"},
+    {t:"<b>Data skew</b> — salting, isolate-and-broadcast hot keys, AQE", k:"spark_skew"},
+    {t:"Catalyst — logical/physical plans, predicate pushdown, column pruning", k:"spark_catalyst"},
+    {t:"<span class='q'>2TB ETL went 45min → 4hr overnight: investigate</span>", k:"spark_tuning"},
+    {t:"<span class='q'>Job writes 50k small files to S3 — fix & prevent</span>", k:"spark_tuning"},
+  ]},
+]},
+{w:7, phase:"Phase 3 · DE Depth", title:"Trees", groups:[
+  {track:"dsa", target:"20 problems", items:[
+    "Traversals — in/pre/post (recursive AND iterative), level-order BFS",
+    "BST — search/insert/delete, validate, LCA, Kth smallest, floor/ceil",
+    "Construction — from in+pre / in+post, serialize/deserialize",
+  ]},
+  {track:"sql", target:"Hard SQL", items:[
+    "Hard problems daily — combine windows + CTEs + self-joins",
+  ]},
+  {track:"eve", target:"DE — Warehouse · Lake · Lakehouse", items:[
+    {t:"Kimball vs Inmon, star vs snowflake, fact table types, SCD 1/2/3/6", k:"wh_modeling"},
+    {t:"Data lake zones (bronze/silver/gold), data swamp pitfalls", k:"lake_zones"},
+    {t:"Lakehouse — Delta / Iceberg / Hudi: ACID on object store, time travel", k:"lakehouse"},
+    {t:"Iceberg — hidden partitioning, partition evolution, snapshot isolation", k:"iceberg"},
+    {t:"File formats — Parquet vs ORC vs Avro, row groups, predicate pushdown", k:"file_formats"},
+    {t:"<b>Small files problem</b> — OPTIMIZE, Z-order, compaction", k:"small_files"},
+    {t:"<span class='q'>Same metric, two dashboards, different numbers — prevent it</span>", k:"data_governance"},
+  ]},
+]},
+{w:8, phase:"Phase 3 · DE Depth", title:"Graphs", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "Representations + BFS/DFS, connected components, cycle detection",
+    "<b>Topological sort</b> — Kahn's & DFS (ties to Airflow DAGs)",
+    "Dijkstra, Bellman-Ford",
+    "<b>Union-Find</b> — path compression, union by rank",
+  ]},
+  {track:"sql", target:"Hard SQL", items:[
+    "Hard problems — gaps & islands, sessionization patterns",
+  ]},
+  {track:"eve", target:"Cloud — AWS + GCP data stacks", items:[
+    {t:"AWS data stack — S3, Glue, EMR, Athena, Redshift, Kinesis, Lake Formation", k:"aws_stack"},
+    {t:"GCP data stack — GCS, Dataflow, Dataproc, BigQuery, Pub/Sub, Composer", k:"gcp_stack"},
+    {t:"<b>Service mapping</b> — S3↔GCS, EMR↔Dataproc, Kinesis↔Pub/Sub, Redshift↔BigQuery", k:"cloud_mapping"},
+    {t:"BigQuery internals — slots, partitioning, clustering, cost control", k:"bigquery"},
+    {t:"Redshift — dist keys, sort keys, vacuum/analyze, Spectrum", k:"redshift"},
+    {t:"<span class='q'>$200K/mo bill — where do you cut? (lifecycle, spot, pruning, right-sizing)</span>", k:"cloud_cost"},
+    {t:"IAM basics, VPC, when data egress costs bite", k:"iam_vpc"},
+  ]},
+]},
+{w:9, phase:"Phase 3 · DE Depth", title:"Dynamic programming I", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "<b>For each problem:</b> recursive → memoize → tabulate → space-optimize",
+    "1D DP — climbing stairs, house robber, coin change, LIS",
+    "2D DP — unique paths, min path sum, edit distance, LCS",
+  ]},
+  {track:"sql", target:"Hard SQL", items:[
+    "Hard problems — keep daily streak alive",
+  ]},
+  {track:"eve", target:"CI/CD · DevOps · Kubernetes", items:[
+    {t:"CI/CD — pipelines, GitHub Actions/GitLab CI, build→test→deploy stages", k:"cicd"},
+    {t:"<b>Data-specific CI/CD</b> — dbt CI, data quality gates, blue-green for pipelines", k:"data_cicd"},
+    {t:"IaC — Terraform (state, modules, plan/apply), why it matters at scale", k:"terraform"},
+    {t:"Containers — Docker images, layers, multi-stage builds", k:"docker"},
+    {t:"<b>Kubernetes</b> — pods, deployments, services, configmaps/secrets, HPA", k:"k8s"},
+    {t:"Spark on K8s vs YARN — tradeoffs; running data jobs on K8s", k:"spark_k8s"},
+    {t:"Observability — logging, metrics, alerting, lineage as ops concern", k:"observability"},
+    {t:"<span class='q'>Airflow scheduler slow with 200 tasks — diagnose</span>", k:"airflow_perf"},
+  ]},
+]},
+{w:10, phase:"Phase 3 · DE Depth", title:"DP II · greedy + AI/LLM systems", groups:[
+  {track:"dsa", target:"18–20 problems", items:[
+    "DP on subsequences — subset sum, target sum, knapsack variants",
+    "DP on stocks — buy/sell I–IV, cooldown, with fee",
+    "Greedy — activity selection, job sequencing, min platforms, jump game",
+  ]},
+  {track:"sql", target:"Hard + revision", items:[
+    "Hard problems + revisit weak query patterns",
+  ]},
+  {track:"eve", target:"AI — RAG · MCP · Agentic", items:[
+    {t:"<b>Embeddings & vector DBs</b> — pgvector, Pinecone, FAISS; ANN (HNSW, IVF)", k:"vectordb"},
+    {t:"<b>RAG</b> — chunking strategies, retrieval, re-ranking, context windows", k:"rag"},
+    {t:"RAG eval — groundedness, hallucination, retrieval precision/recall", k:"rag_eval"},
+    {t:"<b>Agentic AI</b> — tool use, planning loops, ReAct, multi-agent patterns", k:"agentic"},
+    {t:"<b>MCP</b> — what the Model Context Protocol is, servers/tools, why it matters", k:"mcp"},
+    {t:"LLMOps — prompt versioning, eval pipelines, guardrails, cost/latency", k:"llmops"},
+    {t:"<b>Data engineer's angle</b> — building the ingestion + vector pipeline for RAG", k:"rag_pipeline"},
+    {t:"<span class='q'>Design a RAG pipeline over 10M internal docs that stays fresh</span>", k:"rag_pipeline"},
+  ]},
+]},
+{w:11, phase:"Phase 4 · DE System Design", title:"Advanced DSA + real-time pipelines", groups:[
+  {track:"dsa", target:"15–18 problems", items:[
+    "MST — Kruskal's & Prim's; SCC (Tarjan/Kosaraju); bridges & articulation pts",
+    "<b>Tries</b> — insert/search, prefix, autocomplete, word search in grid",
+    "<b>Heaps</b> — top-K, merge K sorted lists, median from data stream",
+  ]},
+  {track:"sql", target:"Revision", items:[
+    "Revise window functions + CTEs (80% of FAANG SQL rounds)",
+  ]},
+  {track:"eve", target:"DE Sys Design — streaming + CDC", items:[
+    {t:"<b>Real-time pipeline</b> — <span class='q'>1M events/sec, fraud detection + batch analytics</span>", k:"realtime_pipeline"},
+    {t:"Kafka ingest, stream proc (Flink/Spark), feature store, dual-write OLAP+lake", k:"exactly_once_stream"},
+    {t:"Exactly-once, watermarks for late data, backpressure, recovery", k:"exactly_once_stream"},
+    {t:"<b>CDC pipeline</b> — <span class='q'>50 microservices → unified analytics platform</span>", k:"cdc"},
+    {t:"Debezium, schema evolution, deletes, snapshot + ongoing CDC, ordering", k:"cdc"},
+    {t:"Grokking — design Twitter feed, design a chat system (structure practice)", k:"de_interview"},
+  ]},
+]},
+{w:12, phase:"Phase 4 · DE System Design", title:"Mixed DSA + platform design", groups:[
+  {track:"dsa", target:"15–18 problems", items:[
+    "Bit manipulation, intervals (meeting rooms), math/number theory",
+    "<b>Timed mixed sessions</b> — random medium/hard, 45 min each",
+  ]},
+  {track:"sql", target:"Revision", items:[
+    "Final hard problems + speed under time pressure",
+  ]},
+  {track:"eve", target:"DE Sys Design — platforms + governance", items:[
+    {t:"<b>Metrics platform</b> — <span class='q'>10k services, real-time dashboards + alerting</span> (time-series, downsampling, tiers)", k:"metrics_platform"},
+    {t:"<b>Fintech platform</b> — <span class='q'>500k txns/day, fraud + T+1 reporting</span> (event sourcing, CQRS, audit, PII)", k:"event_sourcing"},
+    {t:"Airflow deep — executors, idempotency, robust backfills", k:"airflow_deep"},
+    {t:"Governance — lineage (OpenLineage/DataHub), GDPR delete in a lake, data mesh & contracts", k:"data_governance"},
+  ]},
+]},
+{w:13, phase:"Phase 5 · Mocks & Polish", title:"Mock interviews + behavioral", groups:[
+  {track:"dsa", target:"4 full mocks", items:[
+    "Mock 1 — Arrays/Strings (45 min, think aloud)",
+    "Mock 2 — Trees/Graphs",
+    "Mock 3 — DP",
+    "Mock 4 — Mixed; use Pramp / interviewing.io if possible",
+  ]},
+  {track:"sql", target:"Timed mocks", items:[
+    "2–3 hard problems in 30 min total, under pressure",
+  ]},
+  {track:"eve", target:"DE + SD mocks + behavioral", items:[
+    {t:"Rapid-fire DE — <span class='q'>Spark shuffle; Kafka consumer join; Delta OPTIMIZE; event vs processing time</span>", k:"de_interview"},
+    {t:"Full data-platform system design in 45 min (Uber / log analytics 10TB-day)", k:"realtime_pipeline"},
+    "<b>6–8 STAR stories</b> — design-from-scratch, prod debugging, cross-team influence, mentoring, failure/learning",
+    "Review all personal cheat sheets + weak-area notes",
+  ]},
+]},
+];
+
+const REVIEW = [
+  "Re-solve the 2 hardest DSA problems from this week — timed, no hints",
+  "Timed SQL drill — 2–3 problems in 30 min on DataLemur",
+  "Re-explain this week's evening topics out loud (Feynman technique)",
+  "Update your cheat sheet & log weak areas to revisit",
+];
+
+const DAYS_PER_WEEK=7, WORK_DAYS=6;
+const TOTAL_DAYS=WEEKS.length*DAYS_PER_WEEK;
+const WEEK_BUCKETS={};
+function chunkBuckets(n,buckets){const out=Array.from({length:buckets},()=>[]);for(let i=0;i<n;i++)out[Math.floor(i*buckets/n)].push(i);return out;}
+function globalDay(w,dInWeek){return (w-1)*DAYS_PER_WEEK+dInWeek;}
+
+// ============== STATE (localStorage) ==============
+const KEY="sde-prep-state-v2";
+let state={checked:{},dsa:0,sql:0,streak:[],start:null};
+let filter="all";
+function load(){
+  try{const v=localStorage.getItem(KEY); if(v)state=JSON.parse(v);}catch(e){}
+  if(!state.checked)state.checked={};
+  if(!state.streak)state.streak=[];
+  if(typeof state.dsa!=="number")state.dsa=0;
+  if(typeof state.sql!=="number")state.sql=0;
+}
+let saveT;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}},200);}
+
+// ============== HELPERS ==============
+const CHECK='<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#0E1117" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function isoLocal(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+const today=()=>isoLocal(new Date());
+function itemId(w,gi,ii){return `w${w}-g${gi}-i${ii}`;}
+function reviewId(w,ri){return `w${w}-r${ri}`;}
+function dayDiff(a,b){return Math.floor((Date.parse(b+'T00:00:00')-Date.parse(a+'T00:00:00'))/86400000);}
+function currentDayPos(){
+  const diff=dayDiff(state.start,today());
+  const inRange=(diff>=0 && diff<TOTAL_DAYS);
+  const g=Math.min(Math.max(diff+1,1),TOTAL_DAYS);
+  return {gday:g,w:Math.ceil(g/DAYS_PER_WEEK),dInWeek:((g-1)%DAYS_PER_WEEK)+1,inRange,diff};
+}
+function dateForDay(gday){const d=new Date(state.start+'T00:00:00');d.setDate(d.getDate()+(gday-1));return d;}
+function fmtDate(d){return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});}
+
+// ============== RENDER ==============
+function renderResourceCards(){
+  document.getElementById('rescards').innerHTML=['dsa','sql','sd','de'].map(k=>{
+    const R=RESOURCES[k];
+    return `<a class="rescard" style="--c:${R.color}" href="${R.url}" target="_blank" rel="noopener">
+      <span class="rc-go">↗</span><div class="rc-track">${R.label}</div>
+      <div class="rc-name">${R.name}</div><div class="rc-desc">${R.desc}</div></a>`;
+  }).join('');
+}
+function renderPipe(){
+  const cur=currentPhaseIdx();
+  document.getElementById('pipe').innerHTML=PHASES.map((p,idx)=>{
+    const pr=phaseProgress(p);
+    return `<div class="stage ${idx===cur?'active':''}"><div class="n">${p.n}</div><div class="t">${p.t}</div><div class="wk">${p.wk}</div><div class="bar"><i style="width:${pr}%"></i></div></div>`;
+  }).join('');
+}
+function chip(l,rkey){return `<a class="chip-link c-${rkey}" href="${l.url}" target="_blank" rel="noopener" title="${esc(l.title)}">${TYPE_GLYPH[l.type]||'🔗'} ${prettyHost(l.url)}</a>`;}
+function itemHtml(w,gi,ii,g){
+  const id=itemId(w,gi,ii), it=g.items[ii];
+  const text=(typeof it==='string')?it:it.t;
+  const key=(typeof it==='object')?it.k:null;
+  const rkey=resKeyFor(g.track,w);
+  const dn=state.checked[id]?'done':'';
+  let linksHtml='', go='';
+  if(key && LINKS[key]) linksHtml=`<div class="links">`+LINKS[key].map(l=>chip(l,rkey)).join('')+`</div>`;
+  else go=`<a class="igo" href="${resLinkFor(rkey,w)}" target="_blank" rel="noopener" title="Open in ${RESOURCES[rkey].name}">↗</a>`;
+  return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${text}</span>${linksHtml}</div>${go}</div>`;
+}
+function sectionHtml(W,gi,dInWeek){
+  const g=W.groups[gi];
+  if(filter!=='all' && g.track!==filter) return '';
+  const rkey=resKeyFor(g.track,W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
+  const idxs=WEEK_BUCKETS[W.w][gi][dInWeek-1];
+  let inner;
+  if(idxs.length) inner=idxs.map(ii=>itemHtml(W.w,gi,ii,g)).join('');
+  else inner=`<div class="revnote">↻ Spaced revision — re-attempt earlier ${R.label} material</div>`;
+  return `<div class="dsec"><div class="ghead"><div class="tlabel ${rkey}"><span class="dot ${rkey}"></span>${R.label}<span class="target">· ${g.target}</span></div><a class="reslink r-${rkey}" href="${link}" target="_blank" rel="noopener">${R.name} ↗</a></div>${inner}</div>`;
+}
+function reviewHtml(W){
+  if(filter!=='all') return `<div class="dsec"><div class="revnote">Review & mock day — switch to “All tracks” to view tasks.</div></div>`;
+  const items=REVIEW.map((t,ri)=>{const id=reviewId(W.w,ri);const dn=state.checked[id]?'done':'';return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${t}</span></div></div>`;}).join('');
+  return `<div class="dsec"><div class="ghead"><div class="tlabel rev"><span class="dot" style="background:var(--gold)"></span>REVIEW &amp; MOCK</div></div>${items}</div>`;
+}
+function renderWeeks(){
+  const prevW=new Set([...document.querySelectorAll('.week.open')].map(w=>w.dataset.w));
+  const prevD=new Set([...document.querySelectorAll('.day[open]')].map(d=>d.id));
+  const firstRender=document.querySelectorAll('.week').length===0;
+  const cur=currentDayPos();
+  document.getElementById('weeks').innerHTML=WEEKS.map(W=>{
+    const {done,total}=weekStats(W); const pct=total?Math.round(done/total*100):0;
+    const wOpen=firstRender ? (W.w===cur.w) : prevW.has(String(W.w));
+    let daysHtml='';
+    for(let d=1; d<=DAYS_PER_WEEK; d++){
+      const gday=globalDay(W.w,d);
+      const isReview=(d>WORK_DAYS);
+      const content=isReview ? reviewHtml(W) : W.groups.map((_,gi)=>sectionHtml(W,gi,d)).join('');
+      const ds=dayStats(W,d,WEEK_BUCKETS[W.w]);
+      const complete=ds.total>0 && ds.done===ds.total;
+      const isToday=cur.inRange && gday===cur.gday;
+      const dOpen=firstRender ? isToday : prevD.has(`day-${gday}`);
+      const dateLab=state.start?fmtDate(dateForDay(gday)):'';
+      const tag=isReview?'<span class="dtag review">Review</span>':(isToday?'<span class="dtag today">Today</span>':'<span class="dtag">Study</span>');
+      daysHtml+=`<details class="day ${complete?'complete':''} ${isToday?'today':''}" id="day-${gday}" data-w="${W.w}" data-din="${d}" ${dOpen?'open':''}>
+        <summary class="dsum"><span class="dcaret">▶</span><span class="dn">Day ${gday}</span>${tag}<span class="dfill"></span><span class="ddate">${dateLab}</span><span class="dprog">${ds.done}/${ds.total}</span></summary>
+        <div class="dcontent">${content}</div></details>`;
+    }
+    return `<div class="week ${wOpen?'open':''}" data-w="${W.w}">
+      <button class="whead" data-toggle="${W.w}">
+        <span class="wnum">W${W.w}</span>
+        <span class="wmeta"><h3>${W.title}</h3><div class="wphase">${W.phase}</div></span>
+        <span class="wright"><span class="wbar"><i style="width:${pct}%"></i></span><span class="wpct">${pct}%</span><span class="caret">▶</span></span>
+      </button>
+      <div class="wbody"><div class="days">${daysHtml}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ============== STATS ==============
+function weekStats(W){
+  let done=0,total=0;
+  W.groups.forEach((g,gi)=>g.items.forEach((_,ii)=>{total++; if(state.checked[itemId(W.w,gi,ii)])done++;}));
+  REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
+  return {done,total};
+}
+function dayStats(W,dInWeek,buckets){
+  let done=0,total=0;
+  if(dInWeek<=WORK_DAYS){
+    W.groups.forEach((g,gi)=>buckets[gi][dInWeek-1].forEach(ii=>{total++; if(state.checked[itemId(W.w,gi,ii)])done++;}));
+  } else {
+    REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
+  }
+  return {done,total};
+}
+function phaseProgress(p){let d=0,t=0;WEEKS.filter(W=>p.weeks.includes(W.w)).forEach(W=>{const s=weekStats(W);d+=s.done;t+=s.total;});return t?Math.round(d/t*100):0;}
+function currentPhaseIdx(){for(let i=0;i<PHASES.length;i++){if(phaseProgress(PHASES[i])<100)return i;}return PHASES.length-1;}
+function overallStats(){let d=0,t=0;WEEKS.forEach(W=>{const s=weekStats(W);d+=s.done;t+=s.total;});return {d,t};}
+function streakCount(){
+  const set=new Set(state.streak); let n=0; let day=new Date();
+  if(!set.has(today()))day.setDate(day.getDate()-1);
+  for(;;){const k=isoLocal(day); if(set.has(k)){n++;day.setDate(day.getDate()-1);}else break;}
+  return n;
+}
+function refreshStats(){
+  const {d,t}=overallStats(); const pct=t?Math.round(d/t*100):0;
+  document.getElementById('ring').style.setProperty('--p',pct);
+  document.getElementById('ringPct').textContent=pct+'%';
+  document.getElementById('overallHint').textContent=`${d} / ${t} items done`;
+  document.getElementById('dsaVal').textContent=state.dsa;
+  document.getElementById('sqlVal').textContent=state.sql;
+  document.getElementById('streakVal').textContent=streakCount();
+  const sb=document.getElementById('streakBtn');
+  if(state.streak.includes(today())){sb.textContent='✓ Today logged';sb.classList.add('done');}
+  else{sb.textContent='Mark today done';sb.classList.remove('done');}
+}
+function refreshWeekBars(){
+  WEEKS.forEach(W=>{
+    const el=document.querySelector(`.week[data-w="${W.w}"]`); if(!el)return;
+    const {done,total}=weekStats(W); const pct=total?Math.round(done/total*100):0;
+    el.querySelector('.wpct').textContent=pct+'%';
+    const bar=el.querySelector('.wbar i'); if(bar)bar.style.width=pct+'%';
+  });
+}
+function refreshToday(){
+  const c=currentDayPos();
+  const el=document.getElementById('tbDay'), wk=document.getElementById('tbWk');
+  if(c.diff<0){el.textContent=`Starts in ${-c.diff} day${c.diff===-1?'':'s'}`; wk.textContent=`· Day 1 is ${fmtDate(dateForDay(1))}`;}
+  else if(c.diff>=TOTAL_DAYS){el.textContent='Plan complete 🎉'; wk.textContent=`· all ${TOTAL_DAYS} days elapsed`;}
+  else {el.textContent=`Day ${c.gday} of ${TOTAL_DAYS}`; wk.textContent=`· Week ${c.w} · Day ${c.dInWeek} · ${fmtDate(dateForDay(c.gday))}`;}
+}
+function updateDay(dayEl){
+  const w=+dayEl.dataset.w, d=+dayEl.dataset.din, W=WEEKS.find(x=>x.w===w);
+  const {done,total}=dayStats(W,d,WEEK_BUCKETS[w]);
+  const pe=dayEl.querySelector('.dprog'); if(pe)pe.textContent=`${done}/${total}`;
+  dayEl.classList.toggle('complete', total>0 && done===total);
+}
+
+// ============== EVENTS ==============
+document.addEventListener('click',e=>{
+  if(e.target.closest('a')) return; // let links open
+  const item=e.target.closest('.item');
+  if(item){
+    const id=item.dataset.id;
+    state.checked[id]=!state.checked[id];
+    if(!state.checked[id])delete state.checked[id];
+    item.classList.toggle('done');
+    const dayEl=item.closest('.day'); if(dayEl)updateDay(dayEl);
+    refreshStats();refreshWeekBars();renderPipe();save();return;
+  }
+  const tog=e.target.closest('[data-toggle]');
+  if(tog){tog.closest('.week').classList.toggle('open');return;}
+  const cb=e.target.closest('[data-c]');
+  if(cb){const k=cb.dataset.c,d=parseInt(cb.dataset.d,10);state[k]=Math.max(0,(state[k]||0)+d);refreshStats();save();return;}
+  const chipEl=e.target.closest('.chip');
+  if(chipEl){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));chipEl.classList.add('on');filter=chipEl.dataset.f;renderWeeks();refreshWeekBars();return;}
+});
+document.getElementById('streakBtn').addEventListener('click',()=>{
+  const t=today(); const i=state.streak.indexOf(t);
+  if(i>=0)state.streak.splice(i,1); else state.streak.push(t);
+  refreshStats();save();
+});
+document.getElementById('expandAll').addEventListener('click',()=>{document.querySelectorAll('.week').forEach(w=>w.classList.add('open'));document.querySelectorAll('.day').forEach(d=>d.open=true);});
+document.getElementById('collapseAll').addEventListener('click',()=>{document.querySelectorAll('.week').forEach(w=>w.classList.remove('open'));document.querySelectorAll('.day').forEach(d=>d.open=false);});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Reset all progress — checkmarks, counters, and streak? (Your start date is kept.) This cannot be undone.'))return;
+  state={checked:{},dsa:0,sql:0,streak:[],start:state.start};
+  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+  renderWeeks();renderPipe();refreshStats();refreshWeekBars();refreshToday();
+});
+document.getElementById('startDate').addEventListener('change',e=>{
+  state.start=e.target.value||today(); save();
+  renderWeeks();refreshWeekBars();refreshToday();
+});
+document.getElementById('jumpToday').addEventListener('click',()=>{
+  const c=currentDayPos();
+  const wkEl=document.querySelector(`.week[data-w="${c.w}"]`); if(wkEl)wkEl.classList.add('open');
+  const dayEl=document.getElementById(`day-${c.gday}`); if(dayEl){dayEl.open=true; dayEl.scrollIntoView({behavior:'smooth',block:'center'});}
+});
+
+// ============== INIT ==============
+(function(){
+  load();
+  if(!state.start){state.start=today();save();}
+  WEEKS.forEach(W=>WEEK_BUCKETS[W.w]=W.groups.map(g=>chunkBuckets(g.items.length,WORK_DAYS)));
+  document.getElementById('startDate').value=state.start;
+  renderResourceCards();renderPipe();renderWeeks();refreshStats();refreshWeekBars();refreshToday();
+})();
+</script>
+</body>
+</html>
