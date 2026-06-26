@@ -86,7 +86,11 @@
   .bk-sync{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
   .bk-sub{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text);margin-bottom:6px}
   .bk-sub span{font-weight:400;color:var(--faint)}
-  #bkCode{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px;resize:vertical}
+  #bkCode{width:100%;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px;resize:vertical}
+  .bk-cloud{margin-bottom:4px}
+  #cloudCode{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:7px 9px}
+  .cloud-status{font-size:11px;color:var(--faint);margin-top:8px;line-height:1.45}
+  .cloud-status.ok{color:var(--ok)}
 
   /* ---- Top stats ---- */
   .stats{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:14px;margin-top:14px}
@@ -269,15 +273,18 @@
         <details class="backup">
           <summary>⬍ Backup &amp; sync</summary>
           <div class="bk-body">
-            <p class="bk-note">Progress is saved in <b>this browser only</b>. Download a backup, or move it to another device.</p>
-            <div class="bk-row">
-              <button class="bk-btn" id="bkExport">⬇ Download backup</button>
-              <button class="bk-btn" id="bkImportBtn">⬆ Restore from file</button>
-              <input type="file" id="bkImport" accept="application/json,.json" hidden>
+            <div class="bk-cloud">
+              <div class="bk-sub">☁ Cloud sync <span>— check on one device, see it on all (automatic)</span></div>
+              <div id="cloudPanel"></div>
             </div>
             <div class="bk-sync">
-              <div class="bk-sub">Sync code <span>— copy here, paste &amp; Apply on another device</span></div>
-              <textarea id="bkCode" rows="3" spellcheck="false"></textarea>
+              <div class="bk-sub">Manual backup <span>— offline file or one-shot copy/paste</span></div>
+              <div class="bk-row">
+                <button class="bk-btn" id="bkExport">⬇ Download file</button>
+                <button class="bk-btn" id="bkImportBtn">⬆ Restore file</button>
+                <input type="file" id="bkImport" accept="application/json,.json" hidden>
+              </div>
+              <textarea id="bkCode" rows="2" spellcheck="false" placeholder="one-shot sync code"></textarea>
               <div class="bk-row">
                 <button class="bk-btn" id="bkCopy">Copy code</button>
                 <button class="bk-btn" id="bkApply">Apply pasted code</button>
@@ -847,17 +854,22 @@ function globalDay(w,dInWeek){return (w-1)*DAYS_PER_WEEK+dInWeek;}
 
 // ============== STATE (localStorage) ==============
 const KEY="sde-prep-state-v2";
-let state={checked:{},dsa:0,sql:0,streak:[],start:null};
+const CLOUD_KEY="sde-prep-cloud";
+const FIREBASE_CONFIG={apiKey:"AIzaSyBnI8cGcvS1hEEnQea-H2SfVU6FZCH8Sks",authDomain:"prep-tracker-cb20a.firebaseapp.com",projectId:"prep-tracker-cb20a",storageBucket:"prep-tracker-cb20a.firebasestorage.app",messagingSenderId:"995097712260",appId:"1:995097712260:web:2f8f3f29d6848267cbd4d1"};
+let state={checked:{},dsa:0,sql:0,streak:[],start:null,updatedAt:0};
 let filter="all";
+let cloud=null;
 function load(){
   try{const v=localStorage.getItem(KEY); if(v)state=JSON.parse(v);}catch(e){}
   if(!state.checked)state.checked={};
   if(!state.streak)state.streak=[];
   if(typeof state.dsa!=="number")state.dsa=0;
   if(typeof state.sql!=="number")state.sql=0;
+  if(typeof state.updatedAt!=="number")state.updatedAt=0;
 }
 let saveT;
-function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}},200);}
+function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function save(){state.updatedAt=Date.now();clearTimeout(saveT);saveT=setTimeout(()=>{persistLocal();cloudPush();},200);}
 
 // ============== HELPERS ==============
 const CHECK='<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#0E1117" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -1075,14 +1087,58 @@ function renderTodayPanel(){
 // ---- Backup & sync ----
 function syncCode(){return btoa(unescape(encodeURIComponent(JSON.stringify(state))));}
 function refreshSyncCode(){const el=document.getElementById('bkCode'); if(el && document.activeElement!==el)el.value=syncCode();}
-function applyState(obj){
+function applyState(obj, fromRemote){
   if(!obj||typeof obj!=='object')throw 0;
   state={checked:(obj.checked&&typeof obj.checked==='object')?obj.checked:{},
     dsa:typeof obj.dsa==='number'?obj.dsa:0, sql:typeof obj.sql==='number'?obj.sql:0,
-    streak:Array.isArray(obj.streak)?obj.streak:[], start:obj.start||today()};
-  save();
-  document.getElementById('startDate').value=state.start;
+    streak:Array.isArray(obj.streak)?obj.streak:[], start:obj.start||today(),
+    updatedAt: fromRemote ? (typeof obj.updatedAt==='number'?obj.updatedAt:Date.now()) : Date.now()};
+  persistLocal();
+  const sd=document.getElementById('startDate'); if(sd)sd.value=state.start;
   renderWeeks();renderPipe();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
+  if(!fromRemote) cloudPush();
+}
+
+// ---- Cloud sync (Firebase Firestore) — automatic cross-device ----
+function setCloudStatus(msg,ok){const e=document.getElementById('cloudStatus'); if(e){e.textContent=msg; e.className='cloud-status'+(ok?' ok':'');}}
+function savedCloud(){ try{return JSON.parse(localStorage.getItem(CLOUD_KEY)||'null');}catch(e){return null;} }
+function cloudPush(){ if(!cloud||!cloud.ref)return; try{ cloud.setDoc(cloud.ref, JSON.parse(JSON.stringify(state))); }catch(e){} }
+async function cloudConnect(code){
+  code=(code||'').trim().toLowerCase();
+  if(code.length<4){ setCloudStatus('Pick a code of at least 4 characters.'); return false; }
+  setCloudStatus('Connecting…');
+  try{
+    const fa=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const fs=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const app=fa.getApps().length?fa.getApps()[0]:fa.initializeApp(FIREBASE_CONFIG);
+    const db=fs.getFirestore(app);
+    const ref=fs.doc(db,'prep',code);
+    if(cloud&&cloud.unsub){try{cloud.unsub();}catch(e){}}
+    cloud={ref,code,setDoc:fs.setDoc,unsub:null};
+    const snap=await fs.getDoc(ref);
+    if(snap.exists()){ const r=snap.data(); if((r.updatedAt||0)>(state.updatedAt||0)) applyState(r,true); else cloudPush(); }
+    else cloudPush();
+    cloud.unsub=fs.onSnapshot(ref, s=>{ if(!s.exists())return; const r=s.data(); if((r.updatedAt||0)>(state.updatedAt||0)) applyState(r,true); },
+      err=>setCloudStatus('Sync error: '+((err&&(err.code||err.message))||err)));
+    localStorage.setItem(CLOUD_KEY,JSON.stringify({code}));
+    renderCloudUI(); setCloudStatus('✓ Live sync on as “'+code+'”',true);
+    return true;
+  }catch(e){ cloud=null; setCloudStatus('Could not connect: '+((e&&e.message)||e)); return false; }
+}
+function cloudDisconnect(){ if(cloud&&cloud.unsub){try{cloud.unsub();}catch(e){}} cloud=null; localStorage.removeItem(CLOUD_KEY); renderCloudUI(); }
+function renderCloudUI(){
+  const p=document.getElementById('cloudPanel'); if(!p)return;
+  if(cloud){
+    p.innerHTML=`<div class="cloud-status ok" id="cloudStatus">✓ Live sync on as “${esc(cloud.code)}”</div>
+      <div class="bk-row" style="margin-top:8px"><button class="bk-btn" id="cloudDisc">Turn off on this device</button></div>
+      <p class="bk-note" style="margin-top:8px">Other device: open this site → <b>Backup &amp; sync</b> → enter <b>${esc(cloud.code)}</b> → Enable. Then it syncs automatically.</p>`;
+    const b=document.getElementById('cloudDisc'); if(b)b.onclick=cloudDisconnect;
+  } else {
+    const s=savedCloud();
+    p.innerHTML=`<div class="bk-row"><input id="cloudCode" placeholder="your private sync code" value="${s?esc(s.code):''}" autocomplete="off" spellcheck="false"><button class="bk-btn" id="cloudEnable">Enable</button></div>
+      <div class="cloud-status" id="cloudStatus">Pick a private code &amp; Enable — then use the <b>same code</b> on every device.</div>`;
+    const b=document.getElementById('cloudEnable'); if(b)b.onclick=()=>cloudConnect(document.getElementById('cloudCode').value);
+  }
 }
 function updateDay(dayEl){
   const w=+dayEl.dataset.w, d=+dayEl.dataset.din, W=WEEKS.find(x=>x.w===w);
@@ -1122,8 +1178,8 @@ document.getElementById('expandAll').addEventListener('click',()=>{document.quer
 document.getElementById('collapseAll').addEventListener('click',()=>{document.querySelectorAll('.week').forEach(w=>w.classList.remove('open'));document.querySelectorAll('.day').forEach(d=>d.open=false);});
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Reset all progress — checkmarks, counters, and streak? (Your start date is kept.) This cannot be undone.'))return;
-  state={checked:{},dsa:0,sql:0,streak:[],start:state.start};
-  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+  state={checked:{},dsa:0,sql:0,streak:[],start:state.start,updatedAt:Date.now()};
+  persistLocal(); cloudPush();
   renderWeeks();renderPipe();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
 });
 document.getElementById('startDate').addEventListener('change',e=>{
@@ -1168,6 +1224,8 @@ document.getElementById('bkApply').addEventListener('click',()=>{
   WEEKS.forEach(W=>WEEK_LAYOUT[W.w]=buildLayout(W));
   document.getElementById('startDate').value=state.start;
   renderResourceCards();renderPipe();renderWeeks();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
+  renderCloudUI();
+  const sc=savedCloud(); if(sc&&sc.code) cloudConnect(sc.code);
 })();
 </script>
 </body>
