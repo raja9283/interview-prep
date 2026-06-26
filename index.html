@@ -824,8 +824,25 @@ const PK_MAP = {
 
 const DAYS_PER_WEEK=7, WORK_DAYS=6;
 const TOTAL_DAYS=WEEKS.length*DAYS_PER_WEEK;
-const WEEK_BUCKETS={};
-function chunkBuckets(n,buckets){const out=Array.from({length:buckets},()=>[]);for(let i=0;i<n;i++)out[Math.floor(i*buckets/n)].push(i);return out;}
+const WEEK_LAYOUT={};
+// Lay out each week so EVERY work day carries DSA + SQL + Evening (no gaps).
+// DSA → distributed at the problem level (distinct problems per day).
+// Evening → topics spread across all days (a heavier concept spans consecutive days when sparse).
+function buildLayout(W){
+  const dsaUnits=[];
+  W.groups[0].items.forEach((it,ii)=>{
+    const pk=pkFor(W.w,'dsa',ii);
+    if(pk && PROBS[pk]) PROBS[pk].forEach((_,pi)=>dsaUnits.push([ii,pi]));
+    else dsaUnits.push([ii,-1]);
+  });
+  const dsa=Array.from({length:WORK_DAYS},()=>[]);
+  if(dsaUnits.length>=WORK_DAYS) dsaUnits.forEach((u,k)=>dsa[Math.floor(k*WORK_DAYS/dsaUnits.length)].push(u));
+  else for(let d=0; d<WORK_DAYS && dsaUnits.length; d++) dsa[d].push(dsaUnits[Math.floor(d*dsaUnits.length/WORK_DAYS)]);
+  const en=W.groups[2].items.length, eve=Array.from({length:WORK_DAYS},()=>[]);
+  if(en>=WORK_DAYS) for(let i=0;i<en;i++) eve[Math.floor(i*WORK_DAYS/en)].push(i);
+  else for(let d=0; d<WORK_DAYS && en; d++) eve[d].push(Math.floor(d*en/WORK_DAYS));
+  return {dsa,eve};
+}
 function globalDay(w,dInWeek){return (w-1)*DAYS_PER_WEEK+dInWeek;}
 
 // ============== STATE (localStorage) ==============
@@ -905,13 +922,35 @@ function itemHtml(w,gi,ii,g){
   else go=`<a class="igo" href="${resLinkFor(rkey,w)}" target="_blank" rel="noopener" title="Open in ${RESOURCES[rkey].name}">↗</a>`;
   return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${text}</span>${linksHtml}</div>${go}</div>`;
 }
-function sectionHtml(W,gi,dInWeek,ignoreFilter){
-  const g=W.groups[gi];
-  if(!ignoreFilter && filter!=='all' && g.track!==filter) return '';
-  const idxs=WEEK_BUCKETS[W.w][gi][dInWeek-1];
-  if(!idxs.length) return '';   // no topic this day → show nothing (revision lives on Day 7)
-  const rkey=resKeyFor(g.track,W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
-  const inner=idxs.map(ii=>itemHtml(W.w,gi,ii,g)).join('');
+function dsaSectionHtml(W,day,ignoreFilter){
+  if(!ignoreFilter && filter!=='all' && filter!=='dsa') return '';
+  const units=WEEK_LAYOUT[W.w].dsa[day-1]; if(!units || !units.length) return '';
+  const g=W.groups[0], link=resLinkFor('dsa',W.w);
+  let body='', curII=null, buf=[];
+  const flush=()=>{
+    if(curII===null) return;
+    const it=g.items[curII], topicText=(typeof it==='object')?it.t:it, pk=pkFor(W.w,'dsa',curII);
+    if(pk && PROBS[pk] && buf.length){
+      const probs=buf.map(pi=>{
+        const p=PROBS[pk][pi], id=`w${W.w}-g0-i${curII}-p${pi}`, dn=state.checked[id]?'done':'', dd=DIFF[p.d]||['',''];
+        return `<div class="item prob ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${esc(p.n)}</span></div><span class="diff ${dd[1]}">${dd[0]}</span><a class="igo" href="${p.u}" target="_blank" rel="noopener" title="Open “${esc(p.n)}” on LeetCode">↗</a></div>`;
+      }).join('');
+      body+=`<div class="topic"><div class="topic-h">${topicText}</div><div class="probs">${probs}</div></div>`;
+    } else {
+      const id=itemId(W.w,0,curII), dn=state.checked[id]?'done':'';
+      body+=`<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${topicText}</span></div><a class="igo" href="${link}" target="_blank" rel="noopener" title="Open in Striver A2Z">↗</a></div>`;
+    }
+    buf=[];
+  };
+  units.forEach(u=>{ const ii=u[0], pi=u[1]; if(ii!==curII){ flush(); curII=ii; } if(pi>=0) buf.push(pi); });
+  flush();
+  return `<div class="dsec"><div class="ghead"><div class="tlabel dsa"><span class="dot dsa"></span>DSA<span class="target">· ${g.target}</span></div><a class="reslink r-dsa" href="${link}" target="_blank" rel="noopener">Striver A2Z ↗</a></div>${body}</div>`;
+}
+function eveSectionHtml(W,day,ignoreFilter){
+  if(!ignoreFilter && filter!=='all' && filter!=='eve') return '';
+  const idxs=WEEK_LAYOUT[W.w].eve[day-1]; if(!idxs || !idxs.length) return '';
+  const g=W.groups[2], rkey=resKeyFor('eve',W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
+  const inner=idxs.map(ii=>itemHtml(W.w,2,ii,g)).join('');
   return `<div class="dsec"><div class="ghead"><div class="tlabel ${rkey}"><span class="dot ${rkey}"></span>${R.label}<span class="target">· ${g.target}</span></div><a class="reslink r-${rkey}" href="${link}" target="_blank" rel="noopener">${R.name} ↗</a></div>${inner}</div>`;
 }
 function reviewHtml(W,ignoreFilter){
@@ -942,8 +981,8 @@ function renderWeeks(){
     for(let d=1; d<=DAYS_PER_WEEK; d++){
       const gday=globalDay(W.w,d);
       const isReview=(d>WORK_DAYS);
-      const content=isReview ? (reviewHtml(W)+sqlSectionHtml(W,d)) : (sectionHtml(W,0,d)+sqlSectionHtml(W,d)+sectionHtml(W,2,d));
-      const ds=dayStats(W,d,WEEK_BUCKETS[W.w]);
+      const content=isReview ? (reviewHtml(W)+sqlSectionHtml(W,d)) : (dsaSectionHtml(W,d)+sqlSectionHtml(W,d)+eveSectionHtml(W,d));
+      const ds=dayStats(W,d);
       const complete=ds.total>0 && ds.done===ds.total;
       const isToday=cur.inRange && gday===cur.gday;
       const dOpen=firstRender ? isToday : prevD.has(`day-${gday}`);
@@ -975,13 +1014,11 @@ function weekStats(W){
   REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   return {done,total};
 }
-function dayStats(W,dInWeek,buckets){
+function dayStats(W,dInWeek){
   let done=0,total=0;
   if(dInWeek<=WORK_DAYS){
-    W.groups.forEach((g,gi)=>{
-      if(g.track==='sql') return;
-      buckets[gi][dInWeek-1].forEach(ii=>unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;}));
-    });
+    WEEK_LAYOUT[W.w].dsa[dInWeek-1].forEach(u=>{ const id=u[1]>=0?`w${W.w}-g0-i${u[0]}-p${u[1]}`:itemId(W.w,0,u[0]); total++; if(state.checked[id])done++; });
+    WEEK_LAYOUT[W.w].eve[dInWeek-1].forEach(ii=>unitIds(W.w,'eve',2,ii).forEach(id=>{total++; if(state.checked[id])done++;}));
   } else {
     REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   }
@@ -1023,8 +1060,8 @@ function renderTodayPanel(){
   if(c.diff<0){host.innerHTML=`<div class="tp-empty">📅 Your plan starts <b>${fmtDate(dateForDay(1))}</b> — ${-c.diff} day${c.diff===-1?'':'s'} to go. Adjust the start date above if that's not right.</div>`;return;}
   if(c.diff>=TOTAL_DAYS){host.innerHTML=`<div class="tp-empty">🎉 You've reached the end of the ${TOTAL_DAYS}-day timeline. Keep drilling weak areas — then go get the offer.</div>`;return;}
   const W=WEEKS.find(x=>x.w===c.w), d=c.dInWeek, gday=c.gday, isReview=d>WORK_DAYS;
-  const content=isReview ? (reviewHtml(W,true)+sqlSectionHtml(W,d,true)) : (sectionHtml(W,0,d,true)+sqlSectionHtml(W,d,true)+sectionHtml(W,2,d,true));
-  const ds=dayStats(W,d,WEEK_BUCKETS[W.w]); const pct=ds.total?Math.round(ds.done/ds.total*100):0;
+  const content=isReview ? (reviewHtml(W,true)+sqlSectionHtml(W,d,true)) : (dsaSectionHtml(W,d,true)+sqlSectionHtml(W,d,true)+eveSectionHtml(W,d,true));
+  const ds=dayStats(W,d); const pct=ds.total?Math.round(ds.done/ds.total*100):0;
   host.innerHTML=`<div class="tp-head">
       <div class="tp-id">
         <div class="tp-day">Today · Day ${gday}<span class="tp-of"> / ${TOTAL_DAYS}</span></div>
@@ -1049,7 +1086,7 @@ function applyState(obj){
 }
 function updateDay(dayEl){
   const w=+dayEl.dataset.w, d=+dayEl.dataset.din, W=WEEKS.find(x=>x.w===w);
-  const {done,total}=dayStats(W,d,WEEK_BUCKETS[w]);
+  const {done,total}=dayStats(W,d);
   const pe=dayEl.querySelector('.dprog'); if(pe)pe.textContent=`${done}/${total}`;
   dayEl.classList.toggle('complete', total>0 && done===total);
 }
@@ -1128,7 +1165,7 @@ document.getElementById('bkApply').addEventListener('click',()=>{
 (function(){
   load();
   if(!state.start){state.start=today();save();}
-  WEEKS.forEach(W=>WEEK_BUCKETS[W.w]=W.groups.map(g=>chunkBuckets(g.items.length,WORK_DAYS)));
+  WEEKS.forEach(W=>WEEK_LAYOUT[W.w]=buildLayout(W));
   document.getElementById('startDate').value=state.start;
   renderResourceCards();renderPipe();renderWeeks();refreshStats();refreshWeekBars();renderTodayPanel();refreshSyncCode();
 })();
