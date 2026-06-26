@@ -223,6 +223,7 @@
   .diff.d-medium{color:var(--gold);border-color:rgba(245,181,68,.4);background:rgba(245,181,68,.10)}
   .diff.d-hard{color:var(--dsa);border-color:rgba(255,122,107,.4);background:rgba(255,122,107,.10)}
   .item.done .diff{opacity:.45}
+  .sql-hint{font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.45;padding-left:2px}
 
   .links{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
   .chip-link{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;
@@ -753,10 +754,12 @@ const WEEKS = [
 
 const REVIEW = [
   "Re-solve the 2 hardest DSA problems from this week — timed, no hints",
-  "Timed SQL drill — 2–3 problems in 30 min on DataLemur",
   "Re-explain this week's evening topics out loud (Feynman technique)",
   "Update your cheat sheet & log weak areas to revisit",
 ];
+// SQL is a DAILY discipline — every day incl. the review day: 3 Easy + 2 Medium + 1 Hard.
+const SQL_DAILY=[['E','Easy SQL · #1'],['E','Easy SQL · #2'],['E','Easy SQL · #3'],['M','Medium SQL · #1'],['M','Medium SQL · #2'],['H','Hard SQL · #1']];
+const SQL_LINK="https://datalemur.com/questions";
 
 // ============== PRACTICE PROBLEMS (verified LeetCode links) ==============
 const L="https://leetcode.com/problems/";
@@ -806,14 +809,13 @@ const PROBS = {
 };
 // Attach a problem set to a curriculum item by position:  `${week}-${track}-${itemIndex}`
 const PK_MAP = {
-  "1-sql-0":"sql_basics","1-sql-1":"sql_easy_lc","1-sql-2":"sql_joins_basic",
-  "2-dsa-6":"dsa_easy_starter","2-sql-0":"sql_agg",
-  "3-dsa-0":"arr_basics","3-dsa-1":"sort_merge","3-dsa-2":"sort_quick","3-dsa-4":"arr_classic","3-sql-0":"sql_joins_adv",
-  "4-dsa-0":"hashing","4-dsa-1":"two_pointers","4-dsa-2":"sliding_window","4-sql-0":"sql_subquery",
-  "5-dsa-0":"linked_list","5-dsa-1":"stack","5-dsa-2":"queue","5-sql-0":"sql_window_rank","5-sql-1":"sql_window_analytic",
-  "6-dsa-0":"binary_search","6-dsa-1":"bs_median","6-dsa-2":"backtracking","6-sql-0":"sql_cte","6-sql-1":"sql_case","6-sql-2":"sql_hard",
+  "2-dsa-6":"dsa_easy_starter",
+  "3-dsa-0":"arr_basics","3-dsa-1":"sort_merge","3-dsa-2":"sort_quick","3-dsa-4":"arr_classic",
+  "4-dsa-0":"hashing","4-dsa-1":"two_pointers","4-dsa-2":"sliding_window",
+  "5-dsa-0":"linked_list","5-dsa-1":"stack","5-dsa-2":"queue",
+  "6-dsa-0":"binary_search","6-dsa-1":"bs_median","6-dsa-2":"backtracking",
   "7-dsa-0":"tree_traversal","7-dsa-1":"bst","7-dsa-2":"tree_construct",
-  "8-dsa-0":"graph_traversal","8-dsa-1":"topo_sort","8-dsa-2":"shortest_path","8-dsa-3":"union_find","8-sql-0":"sql_gaps_islands",
+  "8-dsa-0":"graph_traversal","8-dsa-1":"topo_sort","8-dsa-2":"shortest_path","8-dsa-3":"union_find",
   "9-dsa-1":"dp_1d","9-dsa-2":"dp_2d",
   "10-dsa-0":"dp_subseq","10-dsa-1":"dp_stocks","10-dsa-2":"greedy",
   "11-dsa-0":"graph_advanced","11-dsa-1":"trie","11-dsa-2":"heap",
@@ -906,17 +908,27 @@ function itemHtml(w,gi,ii,g){
 function sectionHtml(W,gi,dInWeek,ignoreFilter){
   const g=W.groups[gi];
   if(!ignoreFilter && filter!=='all' && g.track!==filter) return '';
-  const rkey=resKeyFor(g.track,W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
   const idxs=WEEK_BUCKETS[W.w][gi][dInWeek-1];
-  let inner;
-  if(idxs.length) inner=idxs.map(ii=>itemHtml(W.w,gi,ii,g)).join('');
-  else inner=`<div class="revnote">↻ Spaced revision — re-attempt earlier ${R.label} material</div>`;
+  if(!idxs.length) return '';   // no topic this day → show nothing (revision lives on Day 7)
+  const rkey=resKeyFor(g.track,W.w), R=RESOURCES[rkey], link=resLinkFor(rkey,W.w);
+  const inner=idxs.map(ii=>itemHtml(W.w,gi,ii,g)).join('');
   return `<div class="dsec"><div class="ghead"><div class="tlabel ${rkey}"><span class="dot ${rkey}"></span>${R.label}<span class="target">· ${g.target}</span></div><a class="reslink r-${rkey}" href="${link}" target="_blank" rel="noopener">${R.name} ↗</a></div>${inner}</div>`;
 }
 function reviewHtml(W,ignoreFilter){
-  if(!ignoreFilter && filter!=='all') return `<div class="dsec"><div class="revnote">Review & mock day — switch to “All tracks” to view tasks.</div></div>`;
+  if(!ignoreFilter && filter!=='all' && filter!=='eve') return '';
   const items=REVIEW.map((t,ri)=>{const id=reviewId(W.w,ri);const dn=state.checked[id]?'done':'';return `<div class="item ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${t}</span></div></div>`;}).join('');
   return `<div class="dsec"><div class="ghead"><div class="tlabel rev"><span class="dot" style="background:var(--gold)"></span>REVIEW &amp; MOCK</div></div>${items}</div>`;
+}
+function sqlSectionHtml(W,day,ignoreFilter){
+  if(!ignoreFilter && filter!=='all' && filter!=='sql') return '';
+  const g=W.groups.find(x=>x.track==='sql');
+  const focus=g?g.target:'';
+  const hint=g?`<div class="sql-hint">This week's SQL focus: ${g.items.map(it=>typeof it==='string'?it:it.t).join(' · ')}</div>`:'';
+  const slots=SQL_DAILY.map((s,i)=>{
+    const id=`sq-w${W.w}-d${day}-i${i}`, dn=state.checked[id]?'done':''; const dd=DIFF[s[0]];
+    return `<div class="item prob ${dn}" data-id="${id}"><span class="box">${CHECK}</span><div class="ibody"><span class="itext">${s[1]}</span></div><span class="diff ${dd[1]}">${dd[0]}</span><a class="igo" href="${SQL_LINK}" target="_blank" rel="noopener" title="Practice on DataLemur">↗</a></div>`;
+  }).join('');
+  return `<div class="dsec"><div class="ghead"><div class="tlabel sql"><span class="dot sql"></span>SQL<span class="target">· 3 Easy · 2 Medium · 1 Hard · daily${focus?(' · '+focus):''}</span></div><a class="reslink r-sql" href="${SQL_LINK}" target="_blank" rel="noopener">DataLemur ↗</a></div>${slots}${hint}</div>`;
 }
 function renderWeeks(){
   const prevW=new Set([...document.querySelectorAll('.week.open')].map(w=>w.dataset.w));
@@ -930,7 +942,7 @@ function renderWeeks(){
     for(let d=1; d<=DAYS_PER_WEEK; d++){
       const gday=globalDay(W.w,d);
       const isReview=(d>WORK_DAYS);
-      const content=isReview ? reviewHtml(W) : W.groups.map((_,gi)=>sectionHtml(W,gi,d)).join('');
+      const content=isReview ? (reviewHtml(W)+sqlSectionHtml(W,d)) : (sectionHtml(W,0,d)+sqlSectionHtml(W,d)+sectionHtml(W,2,d));
       const ds=dayStats(W,d,WEEK_BUCKETS[W.w]);
       const complete=ds.total>0 && ds.done===ds.total;
       const isToday=cur.inRange && gday===cur.gday;
@@ -955,21 +967,25 @@ function renderWeeks(){
 // ============== STATS ==============
 function weekStats(W){
   let done=0,total=0;
-  W.groups.forEach((g,gi)=>g.items.forEach((_,ii)=>{
-    unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;});
-  }));
+  W.groups.forEach((g,gi)=>{
+    if(g.track==='sql') return;               // SQL is counted as a daily quota below
+    g.items.forEach((_,ii)=>unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;}));
+  });
+  for(let d=1; d<=DAYS_PER_WEEK; d++) for(let i=0;i<SQL_DAILY.length;i++){total++; if(state.checked[`sq-w${W.w}-d${d}-i${i}`])done++;}
   REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   return {done,total};
 }
 function dayStats(W,dInWeek,buckets){
   let done=0,total=0;
   if(dInWeek<=WORK_DAYS){
-    W.groups.forEach((g,gi)=>buckets[gi][dInWeek-1].forEach(ii=>{
-      unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;});
-    }));
+    W.groups.forEach((g,gi)=>{
+      if(g.track==='sql') return;
+      buckets[gi][dInWeek-1].forEach(ii=>unitIds(W.w,g.track,gi,ii).forEach(id=>{total++; if(state.checked[id])done++;}));
+    });
   } else {
     REVIEW.forEach((_,ri)=>{total++; if(state.checked[reviewId(W.w,ri)])done++;});
   }
+  for(let i=0;i<SQL_DAILY.length;i++){total++; if(state.checked[`sq-w${W.w}-d${dInWeek}-i${i}`])done++;}  // SQL daily
   return {done,total};
 }
 function phaseProgress(p){let d=0,t=0;WEEKS.filter(W=>p.weeks.includes(W.w)).forEach(W=>{const s=weekStats(W);d+=s.done;t+=s.total;});return t?Math.round(d/t*100):0;}
@@ -1007,7 +1023,7 @@ function renderTodayPanel(){
   if(c.diff<0){host.innerHTML=`<div class="tp-empty">📅 Your plan starts <b>${fmtDate(dateForDay(1))}</b> — ${-c.diff} day${c.diff===-1?'':'s'} to go. Adjust the start date above if that's not right.</div>`;return;}
   if(c.diff>=TOTAL_DAYS){host.innerHTML=`<div class="tp-empty">🎉 You've reached the end of the ${TOTAL_DAYS}-day timeline. Keep drilling weak areas — then go get the offer.</div>`;return;}
   const W=WEEKS.find(x=>x.w===c.w), d=c.dInWeek, gday=c.gday, isReview=d>WORK_DAYS;
-  const content=isReview?reviewHtml(W,true):W.groups.map((_,gi)=>sectionHtml(W,gi,d,true)).join('');
+  const content=isReview ? (reviewHtml(W,true)+sqlSectionHtml(W,d,true)) : (sectionHtml(W,0,d,true)+sqlSectionHtml(W,d,true)+sectionHtml(W,2,d,true));
   const ds=dayStats(W,d,WEEK_BUCKETS[W.w]); const pct=ds.total?Math.round(ds.done/ds.total*100):0;
   host.innerHTML=`<div class="tp-head">
       <div class="tp-id">
